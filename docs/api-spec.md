@@ -68,6 +68,22 @@ Idempotency-Key: <8-64 character unique key>
 
 삭제된 세션과 `completed` 상태가 아닌 세션은 통계에서 제외합니다.
 
+## 랭킹
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/rankings` | 필요 | Luck Score 기반 사용자 랭킹과 내 순위 조회 |
+
+Query Parameter:
+
+| 이름 | 기본값 | 설명 |
+| --- | --- | --- |
+| `banner_id` | 활성 배너 | 조회할 가챠 배너 |
+| `minimum_draws` | `10` | 랭킹 진입에 필요한 최소 추첨 수 |
+| `limit` | `20` | 반환할 사용자 수, 최대 100 |
+
+랭킹은 Luck Score 내림차순으로 정렬하며, 점수가 같으면 총 추첨 수가 많은 사용자가 우선합니다. 탈퇴·정지 사용자와 삭제되거나 완료되지 않은 가챠 세션은 제외합니다.
+
 ## 커뮤니티
 
 | Method | Path | 인증 | 설명 |
@@ -85,6 +101,5 @@ Idempotency-Key: <8-64 character unique key>
 
 ## 미구현 API
 
-- 랭킹
 - 확률 인증 게시글과 가챠 결과 자동 첨부
 - 관리자 사용자·로그 제어
