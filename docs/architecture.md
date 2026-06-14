@@ -40,6 +40,18 @@ features/gacha/
 
 클라이언트는 확률 계산이나 재화 차감을 수행하지 않습니다. 서버 응답만 화면 상태에 반영합니다.
 
+통계 기능은 다음 구조를 사용합니다.
+
+```text
+features/statistics/
+├── data/
+├── domain/
+├── presentation/
+└── statistics_page.dart
+```
+
+`probabilityStatisticsProvider`가 공식·개인·전체 사용자 확률을 한 번에 조회하며, 화면은 서버가 계산한 편차와 Luck Score를 표시합니다.
+
 ## Backend
 
 ```text
@@ -59,6 +71,18 @@ FastAPI endpoint
 5. 모든 변경을 한 번에 커밋하며 오류가 발생하면 전체 롤백합니다.
 
 `gacha_sessions.idempotency_key`의 unique constraint로 재시도에 의한 중복 차감을 방지합니다.
+
+확률 통계는 별도 집계 테이블을 두지 않고 원본 로그를 조회합니다.
+
+```text
+gacha_pool_items + items
+  -> 등급별 공식 확률
+
+gacha_results + gacha_sessions + items
+  -> 개인/전체 사용자 등급별 획득 수와 실제 확률
+```
+
+Luck Score는 등급별 가중치(`mythic=100`, `legendary=20`, `epic=5`, `rare=2`, `common=1`)를 적용한 개인 관측값을 공식 기대값으로 나눈 백분율입니다. 표본이 없으면 0을 반환합니다.
 
 ## 데이터 무결성
 
