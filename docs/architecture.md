@@ -52,6 +52,18 @@ features/statistics/
 
 `probabilityStatisticsProvider`가 공식·개인·전체 사용자 확률을 한 번에 조회하며, 화면은 서버가 계산한 편차와 Luck Score를 표시합니다.
 
+랭킹 기능도 동일한 계층 구조를 사용합니다.
+
+```text
+features/ranking/
+├── data/
+├── domain/
+├── presentation/
+└── ranking_page.dart
+```
+
+`rankingBoardProvider`는 최소 표본 기준을 충족한 사용자 목록과 현재 사용자의 순위를 조회합니다.
+
 ## Backend
 
 ```text
@@ -83,6 +95,8 @@ gacha_results + gacha_sessions + items
 ```
 
 Luck Score는 등급별 가중치(`mythic=100`, `legendary=20`, `epic=5`, `rare=2`, `common=1`)를 적용한 개인 관측값을 공식 기대값으로 나눈 백분율입니다. 표본이 없으면 0을 반환합니다.
+
+랭킹은 사용자별 등급 획득 수를 집계한 뒤 동일한 Luck Score 산식을 적용합니다. 기본 10회 이상의 표본만 포함하며, 동점은 총 추첨 수와 사용자 ID 순서로 결정해 안정적인 정렬을 보장합니다.
 
 ## 데이터 무결성
 

@@ -4,12 +4,21 @@
 
 | 화면 | Flutter Feature | 주요 API |
 | --- | --- | --- |
-| 로그인/회원가입 | `features/auth` | `/auth/*` |
-| 대시보드 | `features/dashboard` | 구현 예정 |
-| 가챠 | `features/gacha` | 구현 예정 |
-| 인벤토리 | `features/inventory` | 구현 예정 |
-| 확률 통계 | `features/statistics` | 구현 예정 |
-| 랭킹 | `features/ranking` | 구현 예정 |
+| 로그인·회원가입 | `features/auth` | `/auth/*` |
+| 대시보드 | `features/dashboard` | 가챠 배너·이력 데이터 |
+| 가챠 | `features/gacha` | `/gacha/banners`, `/gacha/draw` |
+| 가챠 이력 | `features/gacha` | `/gacha/history` |
+| 인벤토리 | `features/inventory` | `/inventory` |
+| 확률 통계 | `features/statistics` | `/statistics/me` |
+| 랭킹 | `features/ranking` | `/rankings` |
+
+## 랭킹 화면
+
+- 활성 배너의 Luck Score 순위를 표시합니다.
+- 현재 사용자의 순위와 행을 강조합니다.
+- 기본 10회 이상의 가챠 표본을 가진 사용자만 표시합니다.
+- 총 추첨 수, 신화 획득 수, 신화 획득 확률을 함께 표시합니다.
+- 로그인하지 않은 사용자는 로그인 화면으로 이동할 수 있습니다.
 
 ## 커뮤니티 화면
 
@@ -19,7 +28,7 @@
 | 게시글 상세 | `/community/posts/:postId` | 상세, 조회수, 좋아요, 댓글 |
 | 게시글 작성 | `/community/create` | 카테고리, 제목, 내용, 이미지 URL 작성 |
 | 게시글 수정 | `/community/posts/:postId/edit` | 작성자 게시글 수정 |
-| 로그인/회원가입 | `/auth` | JWT 인증 세션 생성 |
+| 로그인·회원가입 | `/auth` | JWT 인증 세션 생성 |
 
 ## 관리자 화면
 
@@ -33,4 +42,4 @@
 
 - 900px 이상: 고정 sidebar와 desktop layout
 - 600px 이상 900px 미만: drawer와 축약 grid
-- 600px 미만: 단일 column과 가로 스크롤 테이블
+- 600px 미만: 단일 column과 가로 스크롤 table
