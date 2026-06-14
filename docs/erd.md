@@ -20,11 +20,15 @@ erDiagram
     ITEMS ||--o{ GACHA_RESULTS : awarded
     ITEMS ||--o{ INVENTORIES : stored
     ITEMS ||--o{ INVENTORY_TRANSACTIONS : changes
+    ITEMS ||--o{ PROBABILITY_CERTIFICATIONS : snapshots
 
     GACHA_SESSIONS ||--|{ GACHA_RESULTS : produces
+    GACHA_SESSIONS ||--o{ PROBABILITY_CERTIFICATIONS : groups
+    GACHA_RESULTS ||--o| PROBABILITY_CERTIFICATIONS : certifies
 
     COMMUNITY_POSTS ||--o{ COMMUNITY_COMMENTS : contains
     COMMUNITY_POSTS ||--o{ COMMUNITY_LIKES : receives
+    COMMUNITY_POSTS ||--o| PROBABILITY_CERTIFICATIONS : verifies
 ```
 
 ## 커뮤니티 테이블
@@ -33,28 +37,22 @@ erDiagram
 
 - 사용자 작성 게시글
 - 카테고리, 이미지 URL, 좋아요 수, 조회수 저장
-- `is_deleted`, `deleted_at`으로 논리 삭제
-- `(category, created_at)` 목록 조회 인덱스
-- `(user_id, created_at)` 사용자 게시글 인덱스
+- `is_deleted`, `deleted_at` 기반 Soft Delete
+- `(category, created_at)`, `(user_id, created_at)` 인덱스
 
 ### community_comments
 
-- 게시글 댓글
-- 게시글 및 사용자 외래키
-- `is_deleted`, `deleted_at`으로 논리 삭제
-- `(post_id, created_at)` 댓글 목록 인덱스
+- 게시글 댓글과 작성 사용자 연결
+- `is_deleted`, `deleted_at` 기반 Soft Delete
+- `(post_id, created_at)` 인덱스
 
 ### community_likes
 
 - 사용자별 게시글 좋아요
 - `(post_id, user_id)` unique constraint
 
-## 다음 단계
+### probability_certifications
 
-`ProbabilityCertification`은 가챠 API와 이력 데이터가 구현된 후 다음 관계로 추가합니다.
-
-```text
-COMMUNITY_POSTS 1 -- 0..1 PROBABILITY_CERTIFICATIONS
-GACHA_SESSIONS 1 -- 0..1 PROBABILITY_CERTIFICATIONS
-ITEMS 1 -- N PROBABILITY_CERTIFICATIONS
-```
+- 게시글과 가챠 결과를 각각 unique FK로 연결
+- 아이템 이름, 등급, 누적 추첨 수, 공식 확률, 개인 확률, 획득 시각 저장
+- 원본 로그를 검증한 뒤 인증 당시 값을 유지하는 스냅샷

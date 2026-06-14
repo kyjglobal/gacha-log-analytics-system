@@ -13,6 +13,7 @@ from app.schemas.community import (
     CommunityPostResponse,
     CommunityPostUpdate,
     LikeResponse,
+    ProbabilityCertificationCreate,
 )
 from app.services.community_service import CommunityService
 
@@ -47,6 +48,22 @@ async def create_post(
     current_user: CurrentUser,
 ) -> CommunityPostResponse:
     return await CommunityService(session).create_post(payload, current_user)
+
+
+@router.post(
+    "/certifications",
+    response_model=CommunityPostResponse,
+    status_code=201,
+)
+async def create_probability_certification(
+    payload: ProbabilityCertificationCreate,
+    session: DbSession,
+    current_user: CurrentUser,
+) -> CommunityPostResponse:
+    return await CommunityService(session).create_probability_certification(
+        payload,
+        current_user,
+    )
 
 
 @router.put("/posts/{post_id}", response_model=CommunityPostResponse)

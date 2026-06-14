@@ -23,6 +23,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   CommunityCategory _category = CommunityCategory.free;
   bool _submitting = false;
   bool _initialized = false;
+  bool _isCertification = false;
 
   @override
   void dispose() {
@@ -78,6 +79,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         _contentController.text = post.content;
         _imageController.text = post.imageUrl ?? '';
         _category = post.category;
+        _isCertification = post.certification != null;
       });
     }
 
@@ -91,17 +93,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             DropdownButtonFormField<CommunityCategory>(
               initialValue: _category,
               decoration: const InputDecoration(labelText: '카테고리'),
-              items: CommunityCategory.values
-                  .map(
-                    (category) => DropdownMenuItem(
-                      value: category,
-                      child: Text(category.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _category = value);
-              },
+              items:
+                  (_isCertification
+                          ? [CommunityCategory.probability]
+                          : CommunityCategory.values.where(
+                              (category) =>
+                                  category != CommunityCategory.probability,
+                            ))
+                      .map(
+                        (category) => DropdownMenuItem(
+                          value: category,
+                          child: Text(category.label),
+                        ),
+                      )
+                      .toList(),
+              onChanged: _isCertification
+                  ? null
+                  : (value) {
+                      if (value != null) setState(() => _category = value);
+                    },
             ),
             const SizedBox(height: 12),
             TextFormField(

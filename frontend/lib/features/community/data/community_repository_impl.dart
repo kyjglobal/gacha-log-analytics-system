@@ -48,6 +48,23 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
+  Future<CommunityPost> createCertification({
+    required int gachaResultId,
+    required String title,
+    required String content,
+    String? imageUrl,
+  }) async {
+    return CommunityPost.fromJson(
+      await _api.createCertification({
+        'gacha_result_id': gachaResultId,
+        'title': title,
+        'content': content,
+        'image_url': imageUrl,
+      }),
+    );
+  }
+
+  @override
   Future<CommunityPost> updatePost({
     required int postId,
     required String title,

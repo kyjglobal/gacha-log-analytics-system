@@ -7,6 +7,7 @@ import '../../../auth/presentation/auth_providers.dart';
 import '../providers/community_providers.dart';
 import '../widgets/comment_card.dart';
 import '../widgets/community_category_chip.dart';
+import '../widgets/probability_result_card.dart';
 
 class CommunityDetailScreen extends ConsumerStatefulWidget {
   const CommunityDetailScreen({super.key, required this.postId});
@@ -124,6 +125,10 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
+              const SizedBox(height: 18),
+            ],
+            if (post.certification != null) ...[
+              ProbabilityResultCard(certification: post.certification!),
               const SizedBox(height: 18),
             ],
             SelectableText(post.content),

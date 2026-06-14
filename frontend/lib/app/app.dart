@@ -9,6 +9,7 @@ import '../features/auth/presentation/auth_screen.dart';
 import '../features/community/presentation/screens/community_detail_screen.dart';
 import '../features/community/presentation/screens/community_screen.dart';
 import '../features/community/presentation/screens/create_post_screen.dart';
+import '../features/community/presentation/screens/probability_certification_screen.dart';
 import '../features/dashboard/dashboard_page.dart';
 import '../features/gacha/gacha_page.dart';
 import '../features/gacha/presentation/gacha_history_screen.dart';
@@ -29,6 +30,12 @@ class GachaLogApp extends StatelessWidget {
       GoRoute(
         path: '/gacha/history',
         builder: (context, state) => const GachaHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/community/certify/:resultId',
+        builder: (context, state) => ProbabilityCertificationScreen(
+          gachaResultId: int.parse(state.pathParameters['resultId']!),
+        ),
       ),
       GoRoute(
         path: '/community',

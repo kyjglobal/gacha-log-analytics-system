@@ -1,4 +1,9 @@
-from app.models.community import CommunityComment, CommunityLike, CommunityPost
+from app.models.community import (
+    CommunityComment,
+    CommunityLike,
+    CommunityPost,
+    ProbabilityCertification,
+)
 from app.models.gacha import GachaBanner, GachaPoolItem, GachaResult, GachaSession
 from app.models.inventory import Inventory, InventoryTransaction
 from app.models.item import Item
@@ -8,6 +13,7 @@ __all__ = [
     "CommunityComment",
     "CommunityLike",
     "CommunityPost",
+    "ProbabilityCertification",
     "GachaBanner",
     "GachaPoolItem",
     "GachaResult",
