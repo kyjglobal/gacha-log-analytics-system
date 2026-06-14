@@ -1,1 +1,9 @@
-enum AppPage { dashboard, gacha, inventory, statistics, ranking, admin }
+enum AppPage {
+  dashboard,
+  gacha,
+  inventory,
+  statistics,
+  ranking,
+  community,
+  admin,
+}
