@@ -113,6 +113,26 @@ Query Parameter:
 
 서버는 결과 소유권과 세션 상태를 검증하고 아이템, 등급, 누적 추첨 수, 공식 확률, 개인 확률, 획득 시각을 자동으로 첨부합니다. 하나의 결과는 한 번만 인증할 수 있으며 카테고리는 `확률 인증`으로 고정됩니다.
 
-## 미구현 API
+## 관리자
 
-- 관리자 사용자·로그 제어
+모든 관리자 API는 JWT 사용자의 `role`이 `admin`이어야 합니다.
+
+| Method | Path | 설명 |
+| --- | --- | --- |
+| GET | `/admin/dashboard` | 사용자, 유효 추첨, 삭제 로그, 게시글 지표 조회 |
+| GET | `/admin/users` | 이메일·닉네임 검색 및 상태 필터 |
+| PATCH | `/admin/users/{user_id}/status` | 활성·정지·차단 상태 변경 |
+| POST | `/admin/users/{user_id}/inventory-adjustments` | 아이템 수동 지급·회수 |
+| GET | `/admin/gacha-sessions` | 사용자별 가챠 세션 조회 |
+| DELETE | `/admin/gacha-sessions/{session_id}` | 비정상 가챠 세션 Soft Delete |
+
+아이템 조정 요청:
+
+```json
+{
+  "item_id": 1,
+  "quantity_delta": -1
+}
+```
+
+양수는 지급, 음수는 회수이며 보유 수량보다 많이 회수할 수 없습니다. 모든 조정은 `admin_adjustment` 인벤토리 거래 로그로 기록됩니다.

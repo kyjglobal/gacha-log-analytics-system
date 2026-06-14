@@ -38,9 +38,12 @@
 
 | 화면 | Flutter Feature | 주요 API |
 | --- | --- | --- |
-| 종합 대시보드 | `features/admin` | 구현 예정 |
-| 사용자 관리 | `features/admin` | 구현 예정 |
-| 로그 분석 | `features/admin` | 구현 예정 |
+| 종합 대시보드 | `features/admin` | `/admin/dashboard` |
+| 사용자 관리 | `features/admin` | `/admin/users` |
+| 아이템 지급·회수 | `features/admin` | `/admin/users/{id}/inventory-adjustments` |
+| 로그 분석·삭제 | `features/admin` | `/admin/gacha-sessions` |
+
+관리자 화면은 전체 사용자, 활성 사용자, 정지·차단 사용자, 유효 추첨 수와 삭제 로그 수를 표시합니다. 사용자 검색과 상태 변경, 아이템 ID 기반 수량 조정, 최근 가챠 세션 Soft Delete를 지원합니다.
 
 ## 반응형 정책
 
