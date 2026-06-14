@@ -42,6 +42,34 @@ class CommunityPostUpdate(BaseModel):
         return normalized
 
 
+class ProbabilityCertificationCreate(BaseModel):
+    gacha_result_id: int = Field(ge=1)
+    title: str = Field(min_length=2, max_length=200)
+    content: str = Field(min_length=1, max_length=20000)
+    image_url: str | None = Field(default=None, max_length=500)
+
+    @field_validator("title", "content")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("공백만 입력할 수 없습니다.")
+        return normalized
+
+
+class ProbabilityCertificationResponse(BaseModel):
+    id: int
+    gacha_result_id: int
+    gacha_session_id: int
+    item_id: int
+    item_name: str
+    item_rarity: str
+    draw_count: int
+    official_probability: float
+    personal_probability: float
+    obtained_at: datetime
+
+
 class CommunityPostResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -55,6 +83,7 @@ class CommunityPostResponse(BaseModel):
     like_count: int
     view_count: int
     comment_count: int = 0
+    certification: ProbabilityCertificationResponse | None = None
     created_at: datetime
     updated_at: datetime
 

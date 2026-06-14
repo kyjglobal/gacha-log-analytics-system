@@ -1,11 +1,20 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 from math import ceil
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.community import CommunityComment, CommunityLike, CommunityPost
+from app.models.community import (
+    CommunityComment,
+    CommunityLike,
+    CommunityPost,
+    ProbabilityCertification,
+)
+from app.models.gacha import GachaResult, GachaSession
+from app.models.item import Item
 from app.models.user import User
 from app.schemas.community import (
     CommunityCategory,
@@ -17,6 +26,8 @@ from app.schemas.community import (
     CommunityPostResponse,
     CommunityPostUpdate,
     LikeResponse,
+    ProbabilityCertificationCreate,
+    ProbabilityCertificationResponse,
 )
 
 
@@ -61,8 +72,17 @@ class CommunityService:
         )
         rows = (
             await self.session.execute(
-                select(CommunityPost, User.nickname, comment_count)
+                select(
+                    CommunityPost,
+                    User.nickname,
+                    comment_count,
+                    ProbabilityCertification,
+                )
                 .join(User, User.id == CommunityPost.user_id)
+                .outerjoin(
+                    ProbabilityCertification,
+                    ProbabilityCertification.post_id == CommunityPost.id,
+                )
                 .where(*filters)
                 .order_by(CommunityPost.created_at.desc())
                 .offset((page - 1) * size)
@@ -72,8 +92,8 @@ class CommunityService:
 
         return CommunityPostListResponse(
             items=[
-                self._post_response(post, nickname, comments)
-                for post, nickname, comments in rows
+                self._post_response(post, nickname, comments, certification)
+                for post, nickname, comments, certification in rows
             ],
             page=page,
             size=size,
@@ -92,6 +112,7 @@ class CommunityService:
         payload: CommunityPostCreate,
         current_user: User,
     ) -> CommunityPostResponse:
+        self._reject_unverified_probability_category(payload.category)
         post = CommunityPost(
             user_id=current_user.id,
             title=payload.title.strip(),
@@ -104,6 +125,119 @@ class CommunityService:
         await self.session.refresh(post)
         return await self._load_post_response(post.id)
 
+    async def create_probability_certification(
+        self,
+        payload: ProbabilityCertificationCreate,
+        current_user: User,
+    ) -> CommunityPostResponse:
+        result_row = (
+            await self.session.execute(
+                select(GachaResult, GachaSession, Item)
+                .join(
+                    GachaSession,
+                    GachaSession.id == GachaResult.session_id,
+                )
+                .join(Item, Item.id == GachaResult.item_id)
+                .where(
+                    GachaResult.id == payload.gacha_result_id,
+                    GachaSession.user_id == current_user.id,
+                    GachaSession.status == "completed",
+                    GachaSession.is_deleted.is_(False),
+                )
+            )
+        ).one_or_none()
+        if result_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="인증 가능한 가챠 결과를 찾을 수 없습니다.",
+            )
+        existing = await self.session.scalar(
+            select(ProbabilityCertification.id).where(
+                ProbabilityCertification.gacha_result_id
+                == payload.gacha_result_id
+            )
+        )
+        if existing is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="이미 인증 게시글로 등록된 가챠 결과입니다.",
+            )
+
+        result, gacha_session, item = result_row
+        personal_total = (
+            await self.session.scalar(
+                select(func.count(GachaResult.id))
+                .join(
+                    GachaSession,
+                    GachaSession.id == GachaResult.session_id,
+                )
+                .where(
+                    GachaSession.user_id == current_user.id,
+                    GachaSession.banner_id == gacha_session.banner_id,
+                    GachaSession.status == "completed",
+                    GachaSession.is_deleted.is_(False),
+                    GachaSession.id <= gacha_session.id,
+                )
+            )
+            or 0
+        )
+        personal_rarity_count = (
+            await self.session.scalar(
+                select(func.count(GachaResult.id))
+                .join(
+                    GachaSession,
+                    GachaSession.id == GachaResult.session_id,
+                )
+                .join(Item, Item.id == GachaResult.item_id)
+                .where(
+                    GachaSession.user_id == current_user.id,
+                    GachaSession.banner_id == gacha_session.banner_id,
+                    GachaSession.status == "completed",
+                    GachaSession.is_deleted.is_(False),
+                    GachaSession.id <= gacha_session.id,
+                    Item.rarity == item.rarity,
+                )
+            )
+            or 0
+        )
+
+        post = CommunityPost(
+            user_id=current_user.id,
+            title=payload.title.strip(),
+            content=payload.content.strip(),
+            category=CommunityCategory.probability.value,
+            image_url=payload.image_url,
+        )
+        self.session.add(post)
+        await self.session.flush()
+        self.session.add(
+            ProbabilityCertification(
+                post_id=post.id,
+                gacha_result_id=result.id,
+                gacha_session_id=gacha_session.id,
+                item_id=item.id,
+                item_name=item.name,
+                item_rarity=item.rarity,
+                draw_count=personal_total,
+                official_probability=result.base_probability,
+                personal_probability=(
+                    Decimal(personal_rarity_count) / Decimal(personal_total)
+                    if personal_total
+                    else Decimal("0")
+                ),
+                obtained_at=result.created_at,
+            )
+        )
+        try:
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="이미 인증 게시글로 등록된 가챠 결과입니다.",
+            ) from None
+        return await self._load_post_response(post.id)
+
     async def update_post(
         self,
         post_id: int,
@@ -114,7 +248,18 @@ class CommunityService:
         self._require_owner(post.user_id, current_user)
         post.title = payload.title.strip()
         post.content = payload.content.strip()
-        post.category = payload.category.value
+        certification_id = await self.session.scalar(
+            select(ProbabilityCertification.id).where(
+                ProbabilityCertification.post_id == post.id
+            )
+        )
+        if certification_id is None:
+            self._reject_unverified_probability_category(payload.category)
+        post.category = (
+            CommunityCategory.probability.value
+            if certification_id is not None
+            else payload.category.value
+        )
         post.image_url = payload.image_url
         await self.session.commit()
         await self.session.refresh(post)
@@ -252,12 +397,21 @@ class CommunityService:
         )
         row = (
             await self.session.execute(
-                select(CommunityPost, User.nickname, comment_count)
+                select(
+                    CommunityPost,
+                    User.nickname,
+                    comment_count,
+                    ProbabilityCertification,
+                )
                 .join(User, User.id == CommunityPost.user_id)
+                .outerjoin(
+                    ProbabilityCertification,
+                    ProbabilityCertification.post_id == CommunityPost.id,
+                )
                 .where(CommunityPost.id == post_id)
             )
         ).one()
-        return self._post_response(row[0], row[1], row[2])
+        return self._post_response(row[0], row[1], row[2], row[3])
 
     @staticmethod
     def _require_owner(owner_id: int, current_user: User) -> None:
@@ -268,10 +422,21 @@ class CommunityService:
             )
 
     @staticmethod
+    def _reject_unverified_probability_category(
+        category: CommunityCategory,
+    ) -> None:
+        if category == CommunityCategory.probability:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="확률 인증 카테고리는 검증된 가챠 결과로만 생성할 수 있습니다.",
+            )
+
+    @staticmethod
     def _post_response(
         post: CommunityPost,
         nickname: str,
         comment_count: int,
+        certification: ProbabilityCertification | None = None,
     ) -> CommunityPostResponse:
         return CommunityPostResponse(
             id=post.id,
@@ -284,6 +449,26 @@ class CommunityService:
             like_count=post.like_count,
             view_count=post.view_count,
             comment_count=comment_count,
+            certification=(
+                ProbabilityCertificationResponse(
+                    id=certification.id,
+                    gacha_result_id=certification.gacha_result_id,
+                    gacha_session_id=certification.gacha_session_id,
+                    item_id=certification.item_id,
+                    item_name=certification.item_name,
+                    item_rarity=certification.item_rarity,
+                    draw_count=certification.draw_count,
+                    official_probability=float(
+                        certification.official_probability
+                    ),
+                    personal_probability=float(
+                        certification.personal_probability
+                    ),
+                    obtained_at=certification.obtained_at,
+                )
+                if certification is not None
+                else None
+            ),
             created_at=post.created_at,
             updated_at=post.updated_at,
         )

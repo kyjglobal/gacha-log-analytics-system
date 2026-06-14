@@ -1,7 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.community import CommunityPostCreate
+from app.schemas.community import (
+    CommunityPostCreate,
+    ProbabilityCertificationCreate,
+)
 
 
 def test_community_post_accepts_supported_category() -> None:
@@ -29,4 +32,23 @@ def test_community_post_rejects_blank_content() -> None:
             title="공백 내용",
             content="   ",
             category="자유 게시판",
+        )
+
+
+def test_probability_certification_accepts_gacha_result() -> None:
+    payload = ProbabilityCertificationCreate(
+        gacha_result_id=1,
+        title="신화 아이템 획득 인증",
+        content="검증된 가챠 결과를 공유합니다.",
+    )
+
+    assert payload.gacha_result_id == 1
+
+
+def test_probability_certification_rejects_invalid_result_id() -> None:
+    with pytest.raises(ValidationError):
+        ProbabilityCertificationCreate(
+            gacha_result_id=0,
+            title="잘못된 인증",
+            content="결과 ID는 양수여야 합니다.",
         )
