@@ -1,0 +1,14 @@
+# type(scope): 한국어 설명
+#
+# 허용 type:
+# feat, fix, refactor, style, docs, test, chore
+#
+# 허용 scope:
+# auth, gacha, inventory, statistics, community, admin, frontend
+# backend, api, database, user
+# docs, docker, erd, project
+#
+# 예시:
+# feat(auth): JWT 로그인 기능 구현
+# fix(gacha): 천장 횟수 초기화 오류 수정
+# docs(api): 커뮤니티 API 명세 작성

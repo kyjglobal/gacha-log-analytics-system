@@ -1,0 +1,44 @@
+name: Git Policy
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  validate-branch-and-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate pull request branch flow
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          if [[ "$BASE_BRANCH" == "main" && "$HEAD_BRANCH" != "develop" ]]; then
+            echo "main 브랜치는 develop 브랜치에서만 병합할 수 있습니다."
+            exit 1
+          fi
+
+          if [[ "$BASE_BRANCH" == "develop" && ! "$HEAD_BRANCH" =~ ^feature/.+ ]]; then
+            echo "develop 브랜치는 feature/* 브랜치에서만 병합할 수 있습니다."
+            exit 1
+          fi
+
+      - name: Validate commit messages
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git log --format=%s "$BASE_SHA..$HEAD_SHA" |
+          while IFS= read -r subject; do
+            python .githooks/validate_commit_msg.py --message "$subject"
+          done

@@ -1,27 +1,28 @@
-# Gacha Log Analysis System
+# Gacha Log Analytics System
 
-대용량 가챠 로그의 적재, 인벤토리 관리, 확률 분석 및 관리자 기능을 제공하는 프로젝트입니다.
+대용량 가챠 로그 적재, 사용자 인벤토리 관리, 공식 확률과 실제 획득 확률 비교, 관리자 백오피스를 제공하는 프로젝트입니다.
 
-## Structure
+## 프로젝트 구조
 
 ```text
 DBP/
 ├── frontend/       # Flutter Web/App
 ├── backend/        # FastAPI + SQLAlchemy + Alembic
-├── docs/           # 화면, ERD, API 및 아키텍처 명세
+├── docs/           # 화면, ERD, API, 아키텍처 명세
 └── docker-compose.yml
 ```
 
-## Run
+## 실행
 
-1. 필요하면 `.env.example`을 `.env`로 복사해 기본 설정을 변경합니다.
-2. MySQL과 FastAPI를 실행합니다. `.env`가 없어도 로컬 기본값으로 실행됩니다.
+필요하면 `.env.example`을 `.env`로 복사해 기본 설정을 변경합니다.
+
+MySQL과 FastAPI:
 
 ```powershell
 docker compose up --build
 ```
 
-3. 다른 터미널에서 Flutter를 실행합니다.
+Flutter:
 
 ```powershell
 cd frontend
@@ -31,4 +32,11 @@ flutter run -d chrome
 - FastAPI Swagger: http://localhost:8000/docs
 - Health check: http://localhost:8000/health
 
-현재 Flutter는 로컬 데모 데이터를 사용합니다. 다음 구현 단계에서 Dio repository를 통해 FastAPI API로 교체합니다.
+## 개발 규칙
+
+- 기여 절차: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Git 브랜치 및 커밋 전략: [docs/git-strategy.md](docs/git-strategy.md)
+- API 초안: [docs/api-spec.md](docs/api-spec.md)
+- ERD: [docs/erd.md](docs/erd.md)
+
+모든 개발은 `develop`에서 생성한 `feature/*` 브랜치에서 수행합니다. 커밋 메시지는 `type(scope): 한국어 설명` 형식을 사용합니다.
