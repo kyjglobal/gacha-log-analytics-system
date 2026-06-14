@@ -8,6 +8,9 @@ erDiagram
     USERS ||--o{ USER_PITY_STATES : tracks
     USERS ||--o{ INVENTORIES : owns
     USERS ||--o{ INVENTORY_TRANSACTIONS : has
+    USERS ||--o{ COMMUNITY_POSTS : writes
+    USERS ||--o{ COMMUNITY_COMMENTS : writes
+    USERS ||--o{ COMMUNITY_LIKES : creates
 
     GACHA_BANNERS ||--o{ GACHA_POOL_ITEMS : contains
     GACHA_BANNERS ||--o{ GACHA_SESSIONS : receives
@@ -19,16 +22,39 @@ erDiagram
     ITEMS ||--o{ INVENTORY_TRANSACTIONS : changes
 
     GACHA_SESSIONS ||--|{ GACHA_RESULTS : produces
+
+    COMMUNITY_POSTS ||--o{ COMMUNITY_COMMENTS : contains
+    COMMUNITY_POSTS ||--o{ COMMUNITY_LIKES : receives
 ```
 
-## Index Policy
+## 커뮤니티 테이블
 
-- `users(email)`, `users(nickname)`: unique index
-- `gacha_sessions(idempotency_key)`: unique index
-- `gacha_sessions(user_id, created_at)`: 사용자 로그 조회
-- `gacha_results(item_id, created_at)`: 아이템별 확률 집계
-- `gacha_results(was_pity_applied, created_at)`: 천장 보정 통계
-- `inventories(user_id, item_id)`: unique index
-- `user_pity_states(user_id, banner_id)`: unique index
+### community_posts
 
-복합 인덱스는 실제 집계 쿼리의 `EXPLAIN ANALYZE` 결과를 확인한 후 migration에 추가합니다.
+- 사용자 작성 게시글
+- 카테고리, 이미지 URL, 좋아요 수, 조회수 저장
+- `is_deleted`, `deleted_at`으로 논리 삭제
+- `(category, created_at)` 목록 조회 인덱스
+- `(user_id, created_at)` 사용자 게시글 인덱스
+
+### community_comments
+
+- 게시글 댓글
+- 게시글 및 사용자 외래키
+- `is_deleted`, `deleted_at`으로 논리 삭제
+- `(post_id, created_at)` 댓글 목록 인덱스
+
+### community_likes
+
+- 사용자별 게시글 좋아요
+- `(post_id, user_id)` unique constraint
+
+## 다음 단계
+
+`ProbabilityCertification`은 가챠 API와 이력 데이터가 구현된 후 다음 관계로 추가합니다.
+
+```text
+COMMUNITY_POSTS 1 -- 0..1 PROBABILITY_CERTIFICATIONS
+GACHA_SESSIONS 1 -- 0..1 PROBABILITY_CERTIFICATIONS
+ITEMS 1 -- N PROBABILITY_CERTIFICATIONS
+```
