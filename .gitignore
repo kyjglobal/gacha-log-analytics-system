@@ -1,0 +1,36 @@
+# Environment
+.env
+*.log
+*.py[cod]
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Flutter
+frontend/.dart_tool/
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/flutter_build/
+frontend/dartpad/
+frontend/package_config.json
+frontend/package_graph.json
+frontend/version
+frontend/coverage/
+frontend/android/local.properties
+frontend/ios/Flutter/ephemeral/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+mysql_data/

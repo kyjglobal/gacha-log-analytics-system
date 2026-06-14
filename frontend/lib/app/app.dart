@@ -1,0 +1,394 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+import '../core/constants/demo_data.dart';
+import '../core/widgets/formatters.dart';
+import '../features/admin/admin_page.dart';
+import '../features/dashboard/dashboard_page.dart';
+import '../features/gacha/gacha_page.dart';
+import '../features/inventory/inventory_page.dart';
+import '../features/ranking/ranking_page.dart';
+import '../features/statistics/statistics_page.dart';
+import '../shared/models/owned_item.dart';
+import 'router.dart';
+import 'theme.dart';
+
+class GachaLogApp extends StatelessWidget {
+  const GachaLogApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Astra Archive',
+      theme: AppTheme.dark(),
+      home: const AppRoot(),
+    );
+  }
+}
+
+class AppRoot extends StatefulWidget {
+  const AppRoot({super.key});
+
+  @override
+  State<AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<AppRoot> {
+  AppPage _page = AppPage.dashboard;
+  int _crystals = DemoData.initialCrystals;
+  int _totalDraws = DemoData.totalDraws;
+  int _pity = DemoData.pity;
+  final List<OwnedItem> _inventory = [...DemoData.inventory];
+
+  void _selectPage(AppPage page) {
+    setState(() => _page = page);
+    if (MediaQuery.sizeOf(context).width < 900) {
+      Navigator.maybePop(context);
+    }
+  }
+
+  Future<void> _draw(int count) async {
+    final cost = count == 1 ? 160 : 1600;
+    if (_crystals < cost) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Not enough crystals.')));
+      return;
+    }
+
+    final random = Random();
+    final results = List.generate(count, (_) {
+      final roll = random.nextDouble() * 100;
+      if (_pity >= 79 || roll < 1.2) {
+        return const OwnedItem(
+          'Astra Crown',
+          ItemRarity.mythic,
+          1,
+          Icons.auto_awesome,
+        );
+      }
+      if (roll < 6.2) {
+        return const OwnedItem(
+          'Abyss Codex',
+          ItemRarity.legendary,
+          1,
+          Icons.menu_book,
+        );
+      }
+      if (roll < 21.2) {
+        return const OwnedItem('Starblade', ItemRarity.epic, 1, Icons.gavel);
+      }
+      if (roll < 51.2) {
+        return const OwnedItem(
+          'Spirit Ring',
+          ItemRarity.rare,
+          1,
+          Icons.circle_outlined,
+        );
+      }
+      return const OwnedItem(
+        'Mana Potion',
+        ItemRarity.common,
+        1,
+        Icons.science,
+      );
+    });
+
+    setState(() {
+      _crystals -= cost;
+      _totalDraws += count;
+      for (final result in results) {
+        _pity = result.rarity == ItemRarity.mythic ? 0 : _pity + 1;
+        final index = _inventory.indexWhere((item) => item.name == result.name);
+        if (index >= 0) {
+          final previous = _inventory[index];
+          _inventory[index] = previous.copyWith(
+            quantity: previous.quantity + 1,
+          );
+        } else {
+          _inventory.add(result);
+        }
+      }
+    });
+
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => DrawResultDialog(results: results),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
+    return Scaffold(
+      drawer: isDesktop
+          ? null
+          : Drawer(
+              backgroundColor: AppColors.surface,
+              child: SafeArea(
+                child: AppNavigation(page: _page, onTap: _selectPage),
+              ),
+            ),
+      body: Row(
+        children: [
+          if (isDesktop)
+            SizedBox(
+              width: 240,
+              child: AppNavigation(page: _page, onTap: _selectPage),
+            ),
+          Expanded(
+            child: Column(
+              children: [
+                TopBar(crystals: _crystals, showMenu: !isDesktop),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _buildPage(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPage() {
+    return switch (_page) {
+      AppPage.dashboard => DashboardPage(
+        key: const ValueKey('dashboard'),
+        crystals: _crystals,
+        totalDraws: _totalDraws,
+        pity: _pity,
+        onDraw: () => _selectPage(AppPage.gacha),
+      ),
+      AppPage.gacha => GachaPage(
+        key: const ValueKey('gacha'),
+        crystals: _crystals,
+        pity: _pity,
+        onDraw: _draw,
+      ),
+      AppPage.inventory => InventoryPage(
+        key: const ValueKey('inventory'),
+        items: _inventory,
+      ),
+      AppPage.statistics => StatisticsPage(
+        key: const ValueKey('statistics'),
+        totalDraws: _totalDraws,
+      ),
+      AppPage.ranking => const RankingPage(key: ValueKey('ranking')),
+      AppPage.admin => const AdminPage(key: ValueKey('admin')),
+    };
+  }
+}
+
+class AppNavigation extends StatelessWidget {
+  const AppNavigation({super.key, required this.page, required this.onTap});
+
+  final AppPage page;
+  final ValueChanged<AppPage> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const entries = [
+      (AppPage.dashboard, Icons.grid_view_rounded, 'Dashboard'),
+      (AppPage.gacha, Icons.auto_awesome, 'Gacha'),
+      (AppPage.inventory, Icons.inventory_2_outlined, 'Inventory'),
+      (AppPage.statistics, Icons.query_stats, 'Statistics'),
+      (AppPage.ranking, Icons.emoji_events_outlined, 'Ranking'),
+      (AppPage.admin, Icons.admin_panel_settings_outlined, 'Admin'),
+    ];
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(right: BorderSide(color: AppColors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 26, 20, 28),
+            child: Row(
+              children: [
+                BrandMark(),
+                SizedBox(width: 12),
+                Text(
+                  'ASTRA\nARCHIVE',
+                  style: TextStyle(
+                    color: AppColors.text,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...entries.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              child: NavigationTile(
+                icon: entry.$2,
+                label: entry.$3,
+                selected: entry.$1 == page,
+                onTap: () => onTap(entry.$1),
+              ),
+            ),
+          ),
+          const Spacer(),
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text(
+              'SYSTEM STATUS\nAll services operational',
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 10,
+                height: 1.7,
+                letterSpacing: .5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.secondary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(11),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: .35),
+            blurRadius: 18,
+          ),
+        ],
+      ),
+      child: const Icon(Icons.auto_awesome, size: 20),
+    );
+  }
+}
+
+class NavigationTile extends StatelessWidget {
+  const NavigationTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? AppColors.primary.withValues(alpha: .16)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: selected ? AppColors.primary : AppColors.muted,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? AppColors.text : AppColors.muted,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TopBar extends StatelessWidget {
+  const TopBar({super.key, required this.crystals, required this.showMenu});
+
+  final int crystals;
+  final bool showMenu;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Row(
+        children: [
+          if (showMenu)
+            Builder(
+              builder: (context) => IconButton(
+                onPressed: Scaffold.of(context).openDrawer,
+                icon: const Icon(Icons.menu),
+              ),
+            ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceHigh,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.diamond_outlined,
+                  color: AppColors.secondary,
+                  size: 18,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  formatNumber(crystals),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          const CircleAvatar(
+            backgroundColor: AppColors.primary,
+            child: Text('K', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
+}
