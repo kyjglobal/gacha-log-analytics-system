@@ -157,10 +157,7 @@ class _AppRootState extends ConsumerState<AppRoot> {
       ),
       AppPage.gacha => const GachaPage(key: ValueKey('gacha')),
       AppPage.inventory => const InventoryPage(key: ValueKey('inventory')),
-      AppPage.statistics => StatisticsPage(
-        key: const ValueKey('statistics'),
-        totalDraws: totalDraws,
-      ),
+      AppPage.statistics => const StatisticsPage(key: ValueKey('statistics')),
       AppPage.ranking => const RankingPage(key: ValueKey('ranking')),
       AppPage.community => const SizedBox.shrink(),
       AppPage.admin => const AdminPage(key: ValueKey('admin')),
