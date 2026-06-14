@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
 import 'gacha_providers.dart';
@@ -55,9 +56,20 @@ class GachaHistoryScreen extends ConsumerWidget {
                                   '${result.rarity} · 공식 확률 '
                                   '${(result.officialProbability * 100).toStringAsFixed(2)}%',
                                 ),
-                                trailing: result.wasPityApplied
-                                    ? const Chip(label: Text('천장'))
-                                    : null,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (result.wasPityApplied)
+                                      const Chip(label: Text('천장')),
+                                    IconButton(
+                                      tooltip: '확률 인증',
+                                      onPressed: () => context.push(
+                                        '/community/certify/${result.id}',
+                                      ),
+                                      icon: const Icon(Icons.verified_outlined),
+                                    ),
+                                  ],
+                                ),
                               ),
                             )
                             .toList(),

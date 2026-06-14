@@ -39,6 +39,16 @@ class CommunityApiService {
     return response.data!;
   }
 
+  Future<Map<String, dynamic>> createCertification(
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/community/certifications',
+      data: data,
+    );
+    return response.data!;
+  }
+
   Future<Map<String, dynamic>> updatePost(
     int postId,
     Map<String, dynamic> data,

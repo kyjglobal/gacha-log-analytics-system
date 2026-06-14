@@ -24,6 +24,14 @@ class PostCard extends StatelessWidget {
               Row(
                 children: [
                   CommunityCategoryChip(category: post.category),
+                  if (post.certification != null) ...[
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.verified,
+                      size: 18,
+                      color: AppColors.success,
+                    ),
+                  ],
                   const Spacer(),
                   Text(
                     post.authorNickname,

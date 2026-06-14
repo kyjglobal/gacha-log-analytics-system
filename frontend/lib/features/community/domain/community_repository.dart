@@ -19,6 +19,13 @@ abstract interface class CommunityRepository {
     String? imageUrl,
   });
 
+  Future<CommunityPost> createCertification({
+    required int gachaResultId,
+    required String title,
+    required String content,
+    String? imageUrl,
+  });
+
   Future<CommunityPost> updatePost({
     required int postId,
     required String title,
