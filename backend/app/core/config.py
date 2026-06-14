@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "mysql+asyncmy://gacha:gacha_password@localhost:3306/gacha_log"
     )
-    jwt_secret_key: str = "change-this-in-production"
+    jwt_secret_key: str = "change-this-secret-before-production-32-bytes"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
