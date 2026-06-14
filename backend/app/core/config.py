@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "change-this-secret-before-production-32-bytes"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    initial_wallet_balance: int = 12840
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
 
     model_config = SettingsConfigDict(
