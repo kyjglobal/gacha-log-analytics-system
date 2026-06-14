@@ -113,6 +113,21 @@ gacha_result_id
 
 `gacha_result_id`와 `post_id`는 각각 unique constraint를 사용해 중복 인증을 차단합니다.
 
+관리자 API는 `CurrentAdmin` dependency를 사용해 일반 사용자 요청을 403으로 차단합니다.
+
+```text
+관리자 JWT
+  -> 활성 사용자 검증
+  -> role=admin 검증
+  -> AdminService
+  -> 사용자 상태 / 인벤토리 / 가챠 로그 변경
+```
+
+- 정지·차단 사용자는 기존 JWT가 있어도 일반 인증 dependency에서 거부됩니다.
+- 가챠 로그 삭제는 `is_deleted`만 변경해 원본 감사 데이터를 유지합니다.
+- 아이템 지급·회수는 인벤토리 행을 잠그고 `inventory_transactions`에 관리자 ID를 기록합니다.
+- 관리자 본인 계정의 정지·차단은 방지합니다.
+
 ## 데이터 무결성
 
 - 사용자와 가챠 로그 삭제는 `is_deleted` 기반 Soft Delete를 사용합니다.

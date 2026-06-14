@@ -27,3 +27,6 @@ def test_openapi_contains_application_routes() -> None:
     assert "/api/v1/inventory" in paths
     assert "/api/v1/statistics/me" in paths
     assert "/api/v1/rankings" in paths
+    assert "/api/v1/admin/dashboard" in paths
+    assert "/api/v1/admin/users" in paths
+    assert "/api/v1/admin/gacha-sessions" in paths
