@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, hash_password, verify_password
+from app.core.config import settings
 from app.models.user import User, Wallet
 from app.schemas.auth import LoginRequest, SignUpRequest, TokenResponse
 
@@ -35,7 +36,12 @@ class AuthService:
         self.session.add(user)
         try:
             await self.session.flush()
-            self.session.add(Wallet(user_id=user.id, balance=0))
+            self.session.add(
+                Wallet(
+                    user_id=user.id,
+                    balance=settings.initial_wallet_balance,
+                )
+            )
             await self.session.commit()
         except IntegrityError:
             await self.session.rollback()
