@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
@@ -10,6 +11,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Numeric,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -90,3 +92,37 @@ class CommunityLike(Base):
         server_default=func.now(),
         nullable=False,
     )
+
+
+class ProbabilityCertification(TimestampMixin, Base):
+    __tablename__ = "probability_certifications"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    post_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("community_posts.id"),
+        unique=True,
+        index=True,
+    )
+    gacha_result_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("gacha_results.id"),
+        unique=True,
+        index=True,
+    )
+    gacha_session_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("gacha_sessions.id"),
+        index=True,
+    )
+    item_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("items.id"),
+        index=True,
+    )
+    item_name: Mapped[str] = mapped_column(String(100))
+    item_rarity: Mapped[str] = mapped_column(String(20))
+    draw_count: Mapped[int] = mapped_column(Integer)
+    official_probability: Mapped[Decimal] = mapped_column(Numeric(10, 8))
+    personal_probability: Mapped[Decimal] = mapped_column(Numeric(10, 8))
+    obtained_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
