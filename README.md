@@ -29,8 +29,15 @@ cd frontend
 flutter run -d chrome
 ```
 
+다른 API 주소를 사용하려면 compile-time 환경변수를 지정합니다.
+
+```powershell
+flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000/api/v1
+```
+
 - FastAPI Swagger: http://localhost:8000/docs
 - Health check: http://localhost:8000/health
+- Community: Flutter sidebar의 `Community`
 
 ## 개발 규칙
 

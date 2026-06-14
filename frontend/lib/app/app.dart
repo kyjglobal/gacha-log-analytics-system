@@ -1,10 +1,15 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/constants/demo_data.dart';
 import '../core/widgets/formatters.dart';
 import '../features/admin/admin_page.dart';
+import '../features/auth/presentation/auth_screen.dart';
+import '../features/community/presentation/screens/community_detail_screen.dart';
+import '../features/community/presentation/screens/community_screen.dart';
+import '../features/community/presentation/screens/create_post_screen.dart';
 import '../features/dashboard/dashboard_page.dart';
 import '../features/gacha/gacha_page.dart';
 import '../features/inventory/inventory_page.dart';
@@ -17,13 +22,44 @@ import 'theme.dart';
 class GachaLogApp extends StatelessWidget {
   const GachaLogApp({super.key});
 
+  static final GoRouter _router = GoRouter(
+    routes: [
+      GoRoute(path: '/', builder: (context, state) => const AppRoot()),
+      GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
+      GoRoute(
+        path: '/community',
+        builder: (context, state) => const CommunityScreen(),
+        routes: [
+          GoRoute(
+            path: 'create',
+            builder: (context, state) => const CreatePostScreen(),
+          ),
+          GoRoute(
+            path: 'posts/:postId',
+            builder: (context, state) => CommunityDetailScreen(
+              postId: int.parse(state.pathParameters['postId']!),
+            ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => CreatePostScreen(
+                  postId: int.parse(state.pathParameters['postId']!),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Astra Archive',
       theme: AppTheme.dark(),
-      home: const AppRoot(),
+      routerConfig: _router,
     );
   }
 }
@@ -43,6 +79,10 @@ class _AppRootState extends State<AppRoot> {
   final List<OwnedItem> _inventory = [...DemoData.inventory];
 
   void _selectPage(AppPage page) {
+    if (page == AppPage.community) {
+      context.go('/community');
+      return;
+    }
     setState(() => _page = page);
     if (MediaQuery.sizeOf(context).width < 900) {
       Navigator.maybePop(context);
@@ -181,6 +221,7 @@ class _AppRootState extends State<AppRoot> {
         totalDraws: _totalDraws,
       ),
       AppPage.ranking => const RankingPage(key: ValueKey('ranking')),
+      AppPage.community => const SizedBox.shrink(),
       AppPage.admin => const AdminPage(key: ValueKey('admin')),
     };
   }
@@ -200,6 +241,7 @@ class AppNavigation extends StatelessWidget {
       (AppPage.inventory, Icons.inventory_2_outlined, 'Inventory'),
       (AppPage.statistics, Icons.query_stats, 'Statistics'),
       (AppPage.ranking, Icons.emoji_events_outlined, 'Ranking'),
+      (AppPage.community, Icons.forum_outlined, 'Community'),
       (AppPage.admin, Icons.admin_panel_settings_outlined, 'Admin'),
     ];
     return Container(
