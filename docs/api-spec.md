@@ -2,87 +2,71 @@
 
 Base path: `/api/v1`
 
-## 인증
-
-| Method | Path | 인증 | 설명 |
-| --- | --- | --- | --- |
-| POST | `/auth/signup` | 불필요 | 회원가입 및 JWT 발급 |
-| POST | `/auth/login` | 불필요 | 로그인 및 JWT 발급 |
-| GET | `/auth/me` | 필요 | 현재 사용자 조회 |
-
 인증이 필요한 요청은 다음 헤더를 사용합니다.
 
 ```text
 Authorization: Bearer <access_token>
 ```
 
-## 커뮤니티 게시글
+## 인증
 
 | Method | Path | 인증 | 설명 |
 | --- | --- | --- | --- |
-| GET | `/community/posts` | 불필요 | 게시글 목록, 카테고리 필터, 검색, 페이지네이션 |
-| GET | `/community/posts/{post_id}` | 불필요 | 게시글 상세 및 조회수 증가 |
-| POST | `/community/posts` | 필요 | 게시글 작성 |
-| PUT | `/community/posts/{post_id}` | 필요 | 작성자 또는 관리자 게시글 수정 |
-| DELETE | `/community/posts/{post_id}` | 필요 | 작성자 또는 관리자 Soft Delete |
-| POST | `/community/posts/{post_id}/like` | 필요 | 좋아요 추가 또는 취소 |
+| POST | `/auth/signup` | 불필요 | 회원가입, 초기 재화 지급, JWT 발급 |
+| POST | `/auth/login` | 불필요 | 로그인 및 JWT 발급 |
+| GET | `/auth/me` | 필요 | 현재 사용자 조회 |
 
-목록 Query Parameter:
+## 가챠
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/gacha/banners` | 필요 | 활성 배너, 확률 풀, 재화, 천장 상태 조회 |
+| POST | `/gacha/draw` | 필요 | 1회 또는 10회 추첨 실행 |
+| GET | `/gacha/history` | 필요 | 사용자 추첨 세션 이력 조회 |
+| GET | `/inventory` | 필요 | 사용자 인벤토리 조회 |
+
+추첨 요청에는 중복 결제를 방지하는 헤더가 필요합니다.
+
+```text
+Idempotency-Key: <8-64 character unique key>
+```
+
+```json
+{
+  "banner_id": 1,
+  "count": 10
+}
+```
+
+가챠 실행은 재화 차감, 세션·결과 로그 생성, 인벤토리 증가, 천장 갱신을 하나의 DB 트랜잭션으로 처리합니다. 동일 사용자가 같은 `Idempotency-Key`로 재요청하면 기존 결과를 반환합니다.
+
+가챠 이력 Query Parameter:
 
 | 이름 | 기본값 | 설명 |
 | --- | --- | --- |
 | `page` | `1` | 페이지 번호 |
-| `size` | `20` | 페이지 크기, 최대 100 |
-| `category` | 없음 | 커뮤니티 카테고리 |
-| `search` | 없음 | 제목 및 내용 검색 |
+| `size` | `20` | 페이지 크기, 최대 50 |
 
-카테고리:
+인벤토리는 `rarity` Query Parameter로 `mythic`, `legendary`, `epic`, `rare`, `common`을 필터링할 수 있습니다.
 
-```text
-확률 인증
-가챠 자랑
-통계 분석
-공략 및 팁
-자유 게시판
-```
-
-게시글 작성 예시:
-
-```json
-{
-  "title": "80회 이전 신화 획득",
-  "content": "누적 62회에서 신화 아이템을 획득했습니다.",
-  "category": "확률 인증",
-  "image_url": "https://example.com/result.png"
-}
-```
-
-## 커뮤니티 댓글
+## 커뮤니티
 
 | Method | Path | 인증 | 설명 |
 | --- | --- | --- | --- |
+| GET | `/community/posts` | 불필요 | 게시글 목록, 검색, 카테고리 필터 |
+| GET | `/community/posts/{post_id}` | 불필요 | 게시글 상세 및 조회수 증가 |
+| POST | `/community/posts` | 필요 | 게시글 작성 |
+| PUT | `/community/posts/{post_id}` | 필요 | 작성자 또는 관리자 게시글 수정 |
+| DELETE | `/community/posts/{post_id}` | 필요 | 게시글 Soft Delete |
+| POST | `/community/posts/{post_id}/like` | 필요 | 좋아요 추가 또는 취소 |
 | GET | `/community/posts/{post_id}/comments` | 불필요 | 댓글 목록 |
 | POST | `/community/posts/{post_id}/comments` | 필요 | 댓글 작성 |
-| PUT | `/community/comments/{comment_id}` | 필요 | 작성자 또는 관리자 댓글 수정 |
-| DELETE | `/community/comments/{comment_id}` | 필요 | 작성자 또는 관리자 댓글 Soft Delete |
+| PUT | `/community/comments/{comment_id}` | 필요 | 댓글 수정 |
+| DELETE | `/community/comments/{comment_id}` | 필요 | 댓글 Soft Delete |
 
-## 기존 도메인 API 계획
+## 미구현 API
 
-| Method | Path | 설명 |
-| --- | --- | --- |
-| GET | `/banners` | 활성 가챠 배너 조회 |
-| POST | `/gacha/draw` | 1회 또는 10회 가챠 실행 |
-| GET | `/gacha/history` | 사용자 가챠 로그 조회 |
-| GET | `/inventory` | 인벤토리 조회 |
-| GET | `/statistics/me` | 개인 확률 통계 |
-| GET | `/rankings` | 공개 사용자 랭킹 |
-
-위 기존 도메인 API는 아직 구현 예정입니다.
-
-## 다음 커뮤니티 단계
-
-- `ProbabilityCertification` 모델
-- 가챠 결과, 인벤토리, 가챠 이력 기반 확률 인증
-- 커뮤니티 평균 확률과 Luck Score
-- 인기 아이템과 인기 게시글 통계
-- 이미지 파일 업로드 저장소 연동
+- 개인·전체 확률 통계
+- 랭킹
+- 확률 인증 게시글과 가챠 결과 자동 첨부
+- 관리자 사용자·로그 제어
