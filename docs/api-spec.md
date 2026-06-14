@@ -49,6 +49,25 @@ Idempotency-Key: <8-64 character unique key>
 
 인벤토리는 `rarity` Query Parameter로 `mythic`, `legendary`, `epic`, `rare`, `common`을 필터링할 수 있습니다.
 
+## 확률 통계
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/statistics/me` | 필요 | 공식·개인·전체 사용자 확률과 Luck Score 조회 |
+
+선택적 `banner_id` Query Parameter로 특정 배너를 조회할 수 있습니다. 생략하면 현재 활성 배너를 사용합니다.
+
+응답은 다음 정보를 포함합니다.
+
+- 개인과 전체 사용자의 유효 가챠 결과 표본 수
+- 등급별 공식 확률
+- 개인 획득 수와 실제 획득 확률
+- 공식 확률 대비 개인 편차
+- 전체 사용자의 획득 수와 실제 획득 확률
+- 희귀도 가중 기대값 대비 개인 결과를 나타내는 Luck Score
+
+삭제된 세션과 `completed` 상태가 아닌 세션은 통계에서 제외합니다.
+
 ## 커뮤니티
 
 | Method | Path | 인증 | 설명 |
@@ -66,7 +85,6 @@ Idempotency-Key: <8-64 character unique key>
 
 ## 미구현 API
 
-- 개인·전체 확률 통계
 - 랭킹
 - 확률 인증 게시글과 가챠 결과 자동 첨부
 - 관리자 사용자·로그 제어
