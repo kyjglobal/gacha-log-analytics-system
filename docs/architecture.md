@@ -64,6 +64,8 @@ features/ranking/
 
 `rankingBoardProvider`는 최소 표본 기준을 충족한 사용자 목록과 현재 사용자의 순위를 조회합니다.
 
+확률 인증 화면은 가챠 이력의 결과 ID만 전달합니다. 아이템명과 확률은 서버가 원본 로그에서 검증하며 클라이언트 입력을 신뢰하지 않습니다.
+
 ## Backend
 
 ```text
@@ -97,6 +99,19 @@ gacha_results + gacha_sessions + items
 Luck Score는 등급별 가중치(`mythic=100`, `legendary=20`, `epic=5`, `rare=2`, `common=1`)를 적용한 개인 관측값을 공식 기대값으로 나눈 백분율입니다. 표본이 없으면 0을 반환합니다.
 
 랭킹은 사용자별 등급 획득 수를 집계한 뒤 동일한 Luck Score 산식을 적용합니다. 기본 10회 이상의 표본만 포함하며, 동점은 총 추첨 수와 사용자 ID 순서로 결정해 안정적인 정렬을 보장합니다.
+
+확률 인증 생성 흐름:
+
+```text
+gacha_result_id
+  -> 결과 소유권과 완료 세션 검증
+  -> 누적 개인 확률 계산
+  -> community_posts 생성
+  -> probability_certifications 스냅샷 생성
+  -> 단일 트랜잭션 커밋
+```
+
+`gacha_result_id`와 `post_id`는 각각 unique constraint를 사용해 중복 인증을 차단합니다.
 
 ## 데이터 무결성
 

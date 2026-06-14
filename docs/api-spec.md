@@ -98,8 +98,21 @@ Query Parameter:
 | POST | `/community/posts/{post_id}/comments` | 필요 | 댓글 작성 |
 | PUT | `/community/comments/{comment_id}` | 필요 | 댓글 수정 |
 | DELETE | `/community/comments/{comment_id}` | 필요 | 댓글 Soft Delete |
+| POST | `/community/certifications` | 필요 | 소유한 가챠 결과로 확률 인증 게시글 생성 |
+
+확률 인증 요청:
+
+```json
+{
+  "gacha_result_id": 31,
+  "title": "Spirit Ring 획득 인증",
+  "content": "검증된 가챠 결과를 공유합니다.",
+  "image_url": "https://example.com/screenshot.png"
+}
+```
+
+서버는 결과 소유권과 세션 상태를 검증하고 아이템, 등급, 누적 추첨 수, 공식 확률, 개인 확률, 획득 시각을 자동으로 첨부합니다. 하나의 결과는 한 번만 인증할 수 있으며 카테고리는 `확률 인증`으로 고정됩니다.
 
 ## 미구현 API
 
-- 확률 인증 게시글과 가챠 결과 자동 첨부
 - 관리자 사용자·로그 제어

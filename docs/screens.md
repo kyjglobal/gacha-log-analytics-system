@@ -11,6 +11,7 @@
 | 인벤토리 | `features/inventory` | `/inventory` |
 | 확률 통계 | `features/statistics` | `/statistics/me` |
 | 랭킹 | `features/ranking` | `/rankings` |
+| 확률 인증 작성 | `features/community` | `/community/certifications` |
 
 ## 랭킹 화면
 
@@ -29,6 +30,9 @@
 | 게시글 작성 | `/community/create` | 카테고리, 제목, 내용, 이미지 URL 작성 |
 | 게시글 수정 | `/community/posts/:postId/edit` | 작성자 게시글 수정 |
 | 로그인·회원가입 | `/auth` | JWT 인증 세션 생성 |
+| 확률 인증 작성 | `/community/certify/:resultId` | 가챠 결과 확인 및 인증 게시글 작성 |
+
+가챠 이력의 각 결과에서 인증 작성 화면으로 이동할 수 있습니다. 게시글 상세 화면은 서버가 검증한 아이템, 등급, 누적 추첨 수, 공식 확률, 개인 확률과 획득 시각을 표시합니다.
 
 ## 관리자 화면
 
