@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../../app/theme.dart';
 
 enum ItemRarity {
-  mythic('Mythic', AppColors.warning),
-  legendary('Legendary', Color(0xFFFF8A65)),
-  epic('Epic', AppColors.primary),
-  rare('Rare', AppColors.secondary),
-  common('Common', AppColors.muted);
+  mythic('신화', AppColors.warning),
+  legendary('전설', Color(0xFFFF8A65)),
+  epic('영웅', AppColors.primary),
+  rare('희귀', AppColors.secondary),
+  common('일반', AppColors.muted);
 
   const ItemRarity(this.label, this.color);
 

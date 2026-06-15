@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/error_message.dart';
 import '../../domain/community_category.dart';
 import '../providers/community_providers.dart';
 import '../widgets/community_category_chip.dart';
@@ -112,7 +113,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                 child: Center(
                   child: TextButton(
                     onPressed: _load,
-                    child: Text('불러오지 못했습니다\n$error\n다시 시도'),
+                    child: Text(
+                      '${userErrorMessage(error)}\n다시 시도',
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),

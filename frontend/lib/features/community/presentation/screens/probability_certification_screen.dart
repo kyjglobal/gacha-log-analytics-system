@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/display_text.dart';
+import '../../../../core/network/error_message.dart';
 import '../../../gacha/domain/gacha_models.dart';
 import '../../../gacha/presentation/gacha_providers.dart';
 import '../providers/community_providers.dart';
@@ -27,6 +29,7 @@ class _ProbabilityCertificationScreenState
   final _imageController = TextEditingController();
   bool _submitting = false;
   bool _initialized = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -38,7 +41,10 @@ class _ProbabilityCertificationScreenState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
     try {
       final post = await ref
           .read(communityRepositoryProvider)
@@ -52,6 +58,8 @@ class _ProbabilityCertificationScreenState
           );
       ref.invalidate(communityPostsProvider);
       if (mounted) context.go('/community/posts/${post.id}');
+    } catch (error) {
+      if (mounted) setState(() => _errorMessage = userErrorMessage(error));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -64,18 +72,21 @@ class _ProbabilityCertificationScreenState
       appBar: AppBar(title: const Text('확률 인증 게시글')),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('가챠 결과를 불러오지 못했습니다.\n$error')),
+        error: (error, _) => Center(
+          child: Text(userErrorMessage(error), textAlign: TextAlign.center),
+        ),
         data: (page) {
           final selection = _findResult(page);
           if (selection == null) {
             return const Center(child: Text('인증할 가챠 결과를 찾을 수 없습니다.'));
           }
           final (draw, result) = selection;
+          final itemName = itemDisplayName(result.itemName);
+          final bannerName = bannerDisplayName(draw.bannerName);
           if (!_initialized) {
             _initialized = true;
-            _titleController.text = '${result.itemName} 획득 확률 인증';
-            _contentController.text =
-                '${draw.bannerName}에서 ${result.itemName}을 획득했습니다.';
+            _titleController.text = '$itemName 획득 확률 인증';
+            _contentController.text = '$bannerName에서 $itemName을 획득했습니다.';
           }
           return Form(
             key: _formKey,
@@ -85,9 +96,9 @@ class _ProbabilityCertificationScreenState
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.verified),
-                    title: Text(result.itemName),
+                    title: Text(itemName),
                     subtitle: Text(
-                      '${result.rarity} · 공식 확률 '
+                      '${rarityLabel(result.rarity)} · 공식 확률 '
                       '${(result.officialProbability * 100).toStringAsFixed(2)}% '
                       '· ${draw.drawCount}회 소환',
                     ),
@@ -117,6 +128,15 @@ class _ProbabilityCertificationScreenState
                   decoration: const InputDecoration(labelText: '스크린샷 URL'),
                 ),
                 const SizedBox(height: 20),
+                if (_errorMessage != null) ...[
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 FilledButton.icon(
                   onPressed: _submitting ? null : _submit,
                   icon: const Icon(Icons.verified),

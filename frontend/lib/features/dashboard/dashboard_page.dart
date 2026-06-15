@@ -25,37 +25,37 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageCanvas(
-      title: 'Welcome, traveler',
-      subtitle: 'Track inventory, rates, pity state, and system statistics.',
+      title: '환영합니다',
+      subtitle: '인벤토리, 획득 확률, 천장 상태와 시스템 통계를 확인하세요.',
       children: [
         ResponsiveGrid(
           minItemWidth: 210,
           children: [
             MetricCard(
-              label: 'Crystals',
+              label: '보유 재화',
               value: formatNumber(crystals),
-              detail: 'Enough for a 10-pull',
+              detail: '10회 소환 가능 재화',
               icon: Icons.diamond_outlined,
               accent: AppColors.secondary,
             ),
             MetricCard(
-              label: 'Total draws',
+              label: '누적 추첨',
               value: formatNumber(totalDraws),
-              detail: 'Top 18% activity',
+              detail: '전체 활동 상위 18%',
               icon: Icons.auto_awesome,
               accent: AppColors.primary,
             ),
             MetricCard(
-              label: 'Pity counter',
+              label: '천장 진행도',
               value: '$pity / 80',
-              detail: '${80 - pity} pulls until guarantee',
+              detail: '확정 획득까지 ${80 - pity}회',
               icon: Icons.bolt,
               accent: AppColors.warning,
             ),
             const MetricCard(
-              label: 'Mythic rate',
+              label: '신화 획득률',
               value: '1.21%',
-              detail: 'Official rate 1.20%',
+              detail: '공식 확률 1.20%',
               icon: Icons.insights,
               accent: AppColors.success,
             ),
@@ -110,24 +110,21 @@ class FeaturedBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const StatusBadge('LIMITED BANNER', AppColors.secondary),
+          const StatusBadge('기간 한정 배너', AppColors.secondary),
           const Spacer(),
           const Icon(Icons.auto_awesome, color: AppColors.secondary, size: 44),
           const SizedBox(height: 12),
           const Text(
-            'Celestial Trace',
+            '천상의 궤적',
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Mythic pickup rate increased',
-            style: TextStyle(color: AppColors.muted),
-          ),
+          const Text('신화 픽업 확률 증가', style: TextStyle(color: AppColors.muted)),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: onTap,
             icon: const Icon(Icons.auto_awesome, size: 17),
-            label: const Text('Open gacha'),
+            label: const Text('가챠 열기'),
           ),
         ],
       ),
@@ -141,7 +138,7 @@ class ActivityChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      title: 'Recent activity',
+      title: '최근 활동',
       child: SizedBox(
         height: 242,
         child: CustomPaint(
@@ -202,18 +199,12 @@ class RecentHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AppCard(
-      title: 'Recent history',
+      title: '최근 획득 기록',
       child: Column(
         children: [
-          ListTile(
-            title: Text('Astra Crown'),
-            subtitle: Text('Mythic item, 2 min ago'),
-          ),
+          ListTile(title: Text('아스트라 왕관'), subtitle: Text('신화 아이템 · 2분 전')),
           Divider(color: AppColors.border),
-          ListTile(
-            title: Text('Spirit Ring'),
-            subtitle: Text('Rare item, 18 min ago'),
-          ),
+          ListTile(title: Text('정령의 반지'), subtitle: Text('희귀 아이템 · 18분 전')),
         ],
       ),
     );

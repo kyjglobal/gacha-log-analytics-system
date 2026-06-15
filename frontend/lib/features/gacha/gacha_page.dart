@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme.dart';
 import '../../core/widgets/page_canvas.dart';
 import '../../core/widgets/responsive_grid.dart';
+import '../../core/constants/display_text.dart';
+import '../../core/network/error_message.dart';
 import '../../shared/models/owned_item.dart';
 import '../../shared/widgets/inventory_card.dart';
 import '../auth/presentation/auth_providers.dart';
@@ -35,7 +37,7 @@ class GachaPage extends ConsumerWidget {
     final session = ref.watch(authSessionProvider).value;
     if (session == null) {
       return PageCanvas(
-        title: 'Celestial Trace',
+        title: '천상의 궤적',
         subtitle: '로그인 후 서버에서 검증되는 가챠를 실행할 수 있습니다.',
         children: [
           Center(
@@ -54,13 +56,13 @@ class GachaPage extends ConsumerWidget {
     return banners.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => PageCanvas(
-        title: 'Celestial Trace',
+        title: '천상의 궤적',
         subtitle: '배너를 불러오지 못했습니다.',
         children: [
           Center(
             child: TextButton(
               onPressed: () => ref.invalidate(gachaBannersProvider),
-              child: Text('$error\n다시 시도'),
+              child: Text('${userErrorMessage(error)}\n다시 시도'),
             ),
           ),
         ],
@@ -68,14 +70,14 @@ class GachaPage extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) {
           return const PageCanvas(
-            title: 'Celestial Trace',
+            title: '천상의 궤적',
             subtitle: '현재 활성화된 배너가 없습니다.',
             children: [],
           );
         }
         final banner = items.first;
         return PageCanvas(
-          title: banner.name,
+          title: bannerDisplayName(banner.name),
           subtitle: '재화 차감, 결과 기록, 인벤토리, 천장을 하나의 트랜잭션으로 처리합니다.',
           actions: [
             TextButton.icon(
@@ -113,7 +115,7 @@ class GachaPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 22),
                   Text(
-                    banner.name.toUpperCase(),
+                    bannerDisplayName(banner.name),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 28,
@@ -189,7 +191,7 @@ class GachaPage extends ConsumerWidget {
                   if (drawState.hasError) ...[
                     const SizedBox(height: 16),
                     Text(
-                      '소환 실패: ${drawState.error}',
+                      '소환 실패: ${userErrorMessage(drawState.error)}',
                       style: const TextStyle(color: AppColors.danger),
                     ),
                   ],
@@ -239,7 +241,7 @@ class DrawButton extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 3),
-          Text('Cost $cost', style: const TextStyle(fontSize: 11)),
+          Text('비용 $cost', style: const TextStyle(fontSize: 11)),
         ],
       ),
     );
@@ -282,7 +284,7 @@ class DrawResultDialog extends StatelessWidget {
                             height: 165,
                             child: InventoryCard(
                               item: OwnedItem(
-                                result.itemName,
+                                itemDisplayName(result.itemName),
                                 _rarity(result.rarity),
                                 1,
                                 Icons.auto_awesome,

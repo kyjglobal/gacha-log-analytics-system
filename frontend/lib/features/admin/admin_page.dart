@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
+import '../../core/constants/display_text.dart';
+import '../../core/network/error_message.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/formatters.dart';
 import '../../core/widgets/metric_card.dart';
@@ -39,7 +41,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
     final currentUser = ref.watch(authSessionProvider).value?.user;
     if (currentUser?.role != 'admin') {
       return const PageCanvas(
-        title: 'Admin Backoffice',
+        title: '관리자 백오피스',
         subtitle: '관리자 권한이 필요한 화면입니다.',
         children: [Center(child: Icon(Icons.lock_outline, size: 64))],
       );
@@ -49,7 +51,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
     final users = ref.watch(adminUsersProvider(_search));
     final sessions = ref.watch(adminGachaSessionsProvider);
     return PageCanvas(
-      title: 'Admin Backoffice',
+      title: '관리자 백오피스',
       subtitle: '사용자, 가챠 로그, 인벤토리 조정을 관리합니다.',
       actions: [
         IconButton(
@@ -61,7 +63,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
       children: [
         dashboard.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text('대시보드를 불러오지 못했습니다: $error'),
+          error: (error, _) => Text(userErrorMessage(error)),
           data: (data) => ResponsiveGrid(
             minItemWidth: 210,
             children: [
@@ -82,7 +84,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
               MetricCard(
                 label: '유효 추첨',
                 value: formatNumber(data.totalDraws),
-                detail: 'Soft Delete 제외',
+                detail: '논리적 삭제 제외',
                 icon: Icons.auto_awesome,
                 accent: AppColors.primary,
               ),
@@ -131,7 +133,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
               const SizedBox(height: 12),
               users.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => Text('사용자를 불러오지 못했습니다: $error'),
+                error: (error, _) => Text(userErrorMessage(error)),
                 data: (page) => Column(
                   children: page.items
                       .map(
@@ -157,7 +159,7 @@ class _AdminPageState extends ConsumerState<AdminPage> {
           title: '최근 가챠 로그',
           child: sessions.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('로그를 불러오지 못했습니다: $error'),
+            error: (error, _) => Text(userErrorMessage(error)),
             data: (page) => Column(
               children: page.items
                   .map(
@@ -168,10 +170,11 @@ class _AdminPageState extends ConsumerState<AdminPage> {
                         '${session.drawCount}회',
                       ),
                       subtitle: Text(
-                        '${session.bannerName} · 비용 ${session.totalCost}',
+                        '${bannerDisplayName(session.bannerName)} · '
+                        '비용 ${session.totalCost}',
                       ),
                       trailing: IconButton(
-                        tooltip: 'Soft Delete',
+                        tooltip: '로그 논리적 삭제',
                         onPressed: session.isDeleted
                             ? null
                             : () async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/network/error_message.dart';
 import 'auth_providers.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
@@ -33,7 +34,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       await ref.read(authSessionProvider.notifier).updateNickname(nickname);
       if (mounted) _showMessage('닉네임을 변경했습니다.');
     } catch (error) {
-      if (mounted) _showMessage('닉네임 변경 실패: $error');
+      if (mounted) _showMessage(userErrorMessage(error));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -50,7 +51,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '계정은 Soft Delete 처리되고 개인정보는 익명화됩니다. '
+              '계정은 논리적으로 삭제되고 개인정보는 익명화됩니다. '
               '가챠 및 커뮤니티 감사 로그는 사용자 ID 기준으로 유지됩니다.',
             ),
             const SizedBox(height: 16),
@@ -81,7 +82,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       await ref.read(authSessionProvider.notifier).deleteAccount(password);
       if (mounted) context.go('/auth');
     } catch (error) {
-      if (mounted) _showMessage('회원 탈퇴 실패: $error');
+      if (mounted) _showMessage(userErrorMessage(error));
     }
   }
 

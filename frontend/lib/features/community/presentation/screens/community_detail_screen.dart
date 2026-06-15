@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme.dart';
+import '../../../../core/network/error_message.dart';
 import '../../../auth/presentation/auth_providers.dart';
 import '../providers/community_providers.dart';
 import '../widgets/comment_card.dart';
@@ -34,9 +35,13 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
       context.push('/auth');
       return;
     }
-    await ref.read(communityRepositoryProvider).toggleLike(widget.postId);
-    ref.invalidate(communityPostProvider(widget.postId));
-    ref.invalidate(communityPostsProvider);
+    try {
+      await ref.read(communityRepositoryProvider).toggleLike(widget.postId);
+      ref.invalidate(communityPostProvider(widget.postId));
+      ref.invalidate(communityPostsProvider);
+    } catch (error) {
+      if (mounted) _showError(error);
+    }
   }
 
   Future<void> _createComment() async {
@@ -54,15 +59,27 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
       _commentController.clear();
       ref.invalidate(communityCommentsProvider(widget.postId));
       ref.invalidate(communityPostProvider(widget.postId));
+    } catch (error) {
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _commentSubmitting = false);
     }
   }
 
   Future<void> _deletePost() async {
-    await ref.read(communityRepositoryProvider).deletePost(widget.postId);
-    ref.invalidate(communityPostsProvider);
-    if (mounted) context.go('/community');
+    try {
+      await ref.read(communityRepositoryProvider).deletePost(widget.postId);
+      ref.invalidate(communityPostsProvider);
+      if (mounted) context.go('/community');
+    } catch (error) {
+      if (mounted) _showError(error);
+    }
+  }
+
+  void _showError(Object error) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(userErrorMessage(error))));
   }
 
   @override
@@ -102,7 +119,9 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
       ),
       body: postState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('게시글을 불러오지 못했습니다.\n$error')),
+        error: (error, _) => Center(
+          child: Text(userErrorMessage(error), textAlign: TextAlign.center),
+        ),
         data: (post) => ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -166,7 +185,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
             const SizedBox(height: 12),
             commentsState.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Text('댓글을 불러오지 못했습니다: $error'),
+              error: (error, _) => Text(userErrorMessage(error)),
               data: (comments) => Column(
                 children: comments
                     .map(
@@ -177,13 +196,19 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen> {
                             (currentUser.id == comment.userId ||
                                 currentUser.role == 'admin'),
                         onDelete: () async {
-                          await ref
-                              .read(communityRepositoryProvider)
-                              .deleteComment(comment.id);
-                          ref.invalidate(
-                            communityCommentsProvider(widget.postId),
-                          );
-                          ref.invalidate(communityPostProvider(widget.postId));
+                          try {
+                            await ref
+                                .read(communityRepositoryProvider)
+                                .deleteComment(comment.id);
+                            ref.invalidate(
+                              communityCommentsProvider(widget.postId),
+                            );
+                            ref.invalidate(
+                              communityPostProvider(widget.postId),
+                            );
+                          } catch (error) {
+                            if (mounted) _showError(error);
+                          }
                         },
                       ),
                     )

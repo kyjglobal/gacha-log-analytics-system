@@ -73,7 +73,7 @@ class GachaLogApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Astra Archive',
+      title: '아스트라 기록 보관소',
       theme: AppTheme.dark(),
       routerConfig: _router,
     );
@@ -103,7 +103,15 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
   @override
   Widget build(BuildContext context) {
-    final isAuthenticated = ref.watch(authSessionProvider).value != null;
+    final authSession = ref.watch(authSessionProvider);
+    if (authSession.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (authSession.value == null) {
+      return const AuthScreen();
+    }
+
+    final isAuthenticated = authSession.value != null;
     final banner = isAuthenticated
         ? ref.watch(gachaBannersProvider).value?.firstOrNull
         : null;
@@ -138,7 +146,7 @@ class _AppRootState extends ConsumerState<AppRoot> {
                 TopBar(
                   crystals: crystals,
                   showMenu: !isDesktop,
-                  nickname: ref.watch(authSessionProvider).value?.user.nickname,
+                  nickname: authSession.value?.user.nickname,
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
@@ -190,13 +198,13 @@ class AppNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const entries = [
-      (AppPage.dashboard, Icons.grid_view_rounded, 'Dashboard'),
-      (AppPage.gacha, Icons.auto_awesome, 'Gacha'),
-      (AppPage.inventory, Icons.inventory_2_outlined, 'Inventory'),
-      (AppPage.statistics, Icons.query_stats, 'Statistics'),
-      (AppPage.ranking, Icons.emoji_events_outlined, 'Ranking'),
-      (AppPage.community, Icons.forum_outlined, 'Community'),
-      (AppPage.admin, Icons.admin_panel_settings_outlined, 'Admin'),
+      (AppPage.dashboard, Icons.grid_view_rounded, '대시보드'),
+      (AppPage.gacha, Icons.auto_awesome, '가챠'),
+      (AppPage.inventory, Icons.inventory_2_outlined, '인벤토리'),
+      (AppPage.statistics, Icons.query_stats, '확률 통계'),
+      (AppPage.ranking, Icons.emoji_events_outlined, '랭킹'),
+      (AppPage.community, Icons.forum_outlined, '커뮤니티'),
+      (AppPage.admin, Icons.admin_panel_settings_outlined, '관리자'),
     ];
     return Container(
       decoration: const BoxDecoration(
@@ -213,7 +221,7 @@ class AppNavigation extends StatelessWidget {
                 BrandMark(),
                 SizedBox(width: 12),
                 Text(
-                  'ASTRA\nARCHIVE',
+                  '아스트라\n기록 보관소',
                   style: TextStyle(
                     color: AppColors.text,
                     fontSize: 14,
@@ -240,7 +248,7 @@ class AppNavigation extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(20),
             child: Text(
-              'SYSTEM STATUS\nAll services operational',
+              '시스템 상태\n모든 서비스 정상',
               style: TextStyle(
                 color: AppColors.muted,
                 fontSize: 10,

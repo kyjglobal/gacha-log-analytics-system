@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/error_message.dart';
 import '../../../auth/presentation/auth_providers.dart';
 import '../../domain/community_category.dart';
 import '../providers/community_providers.dart';
@@ -24,6 +25,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   bool _submitting = false;
   bool _initialized = false;
   bool _isCertification = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -39,7 +41,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       context.push('/auth');
       return;
     }
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
     try {
       final repository = ref.read(communityRepositoryProvider);
       final post = widget.postId == null
@@ -63,6 +68,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       ref.invalidate(communityPostsProvider);
       ref.invalidate(communityPostProvider(post.id));
       if (mounted) context.go('/community/posts/${post.id}');
+    } catch (error) {
+      if (mounted) setState(() => _errorMessage = userErrorMessage(error));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -139,6 +146,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            if (_errorMessage != null) ...[
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              const SizedBox(height: 12),
+            ],
             FilledButton(
               onPressed: _submitting ? null : _submit,
               child: Text(_submitting ? '저장 중...' : '저장'),

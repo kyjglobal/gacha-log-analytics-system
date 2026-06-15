@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/constants/display_text.dart';
+import '../../../core/network/error_message.dart';
 import 'gacha_providers.dart';
 
 class GachaHistoryScreen extends ConsumerWidget {
@@ -18,7 +20,10 @@ class GachaHistoryScreen extends ConsumerWidget {
         error: (error, _) => Center(
           child: TextButton(
             onPressed: () => ref.invalidate(gachaHistoryProvider),
-            child: Text('이력을 불러오지 못했습니다.\n$error\n다시 시도'),
+            child: Text(
+              '이력을 불러오지 못했습니다.\n'
+              '${userErrorMessage(error)}\n다시 시도',
+            ),
           ),
         ),
         data: (page) => page.items.isEmpty
@@ -37,7 +42,8 @@ class GachaHistoryScreen extends ConsumerWidget {
                     return Card(
                       child: ExpansionTile(
                         title: Text(
-                          '${draw.bannerName} · ${draw.drawCount}회 소환',
+                          '${bannerDisplayName(draw.bannerName)} · '
+                          '${draw.drawCount}회 소환',
                         ),
                         subtitle: Text(
                           '세션 #${draw.sessionId} · 천장 '
@@ -51,9 +57,9 @@ class GachaHistoryScreen extends ConsumerWidget {
                             .map(
                               (result) => ListTile(
                                 leading: const Icon(Icons.auto_awesome),
-                                title: Text(result.itemName),
+                                title: Text(itemDisplayName(result.itemName)),
                                 subtitle: Text(
-                                  '${result.rarity} · 공식 확률 '
+                                  '${rarityLabel(result.rarity)} · 공식 확률 '
                                   '${(result.officialProbability * 100).toStringAsFixed(2)}%',
                                 ),
                                 trailing: Row(

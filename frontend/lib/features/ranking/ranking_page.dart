@@ -8,6 +8,8 @@ import '../../core/widgets/formatters.dart';
 import '../../core/widgets/metric_card.dart';
 import '../../core/widgets/page_canvas.dart';
 import '../../core/widgets/responsive_grid.dart';
+import '../../core/constants/display_text.dart';
+import '../../core/network/error_message.dart';
 import '../auth/presentation/auth_providers.dart';
 import 'domain/ranking_models.dart';
 import 'presentation/ranking_providers.dart';
@@ -20,7 +22,7 @@ class RankingPage extends ConsumerWidget {
     final session = ref.watch(authSessionProvider).value;
     if (session == null) {
       return PageCanvas(
-        title: 'Ranking',
+        title: '랭킹',
         subtitle: '로그인 후 검증된 가챠 로그 기반 랭킹을 확인할 수 있습니다.',
         children: [
           Center(
@@ -38,20 +40,20 @@ class RankingPage extends ConsumerWidget {
     return ranking.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => PageCanvas(
-        title: 'Ranking',
+        title: '랭킹',
         subtitle: '랭킹을 불러오지 못했습니다.',
         children: [
           Center(
             child: TextButton(
               onPressed: () => ref.invalidate(rankingBoardProvider),
-              child: Text('$error\n다시 시도'),
+              child: Text('${userErrorMessage(error)}\n다시 시도'),
             ),
           ),
         ],
       ),
       data: (board) => PageCanvas(
-        title: 'Ranking',
-        subtitle: '${board.bannerName}의 Luck Score 순위입니다.',
+        title: '랭킹',
+        subtitle: '${bannerDisplayName(board.bannerName)}의 행운 점수 순위입니다.',
         actions: [
           IconButton(
             tooltip: '새로고침',
@@ -112,7 +114,7 @@ class RankingList extends StatelessWidget {
       );
     }
     return AppCard(
-      title: 'Luck Score Leaderboard',
+      title: '행운 점수 순위표',
       child: Column(
         children: [
           for (var index = 0; index < board.entries.length; index++) ...[
@@ -155,7 +157,7 @@ class RankingTile extends StatelessWidget {
             ),
             if (entry.isCurrentUser) ...[
               const SizedBox(width: 8),
-              const Chip(label: Text('ME')),
+              const Chip(label: Text('나')),
             ],
           ],
         ),

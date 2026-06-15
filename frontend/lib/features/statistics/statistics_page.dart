@@ -8,6 +8,8 @@ import '../../core/widgets/formatters.dart';
 import '../../core/widgets/metric_card.dart';
 import '../../core/widgets/page_canvas.dart';
 import '../../core/widgets/responsive_grid.dart';
+import '../../core/constants/display_text.dart';
+import '../../core/network/error_message.dart';
 import '../../shared/widgets/status_badge.dart';
 import '../auth/presentation/auth_providers.dart';
 import 'domain/statistics_models.dart';
@@ -21,7 +23,7 @@ class StatisticsPage extends ConsumerWidget {
     final session = ref.watch(authSessionProvider).value;
     if (session == null) {
       return PageCanvas(
-        title: 'Probability Analytics',
+        title: '확률 통계',
         subtitle: '로그인 후 개인 확률과 전체 사용자 확률을 비교할 수 있습니다.',
         children: [
           Center(
@@ -39,20 +41,21 @@ class StatisticsPage extends ConsumerWidget {
     return statistics.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => PageCanvas(
-        title: 'Probability Analytics',
+        title: '확률 통계',
         subtitle: '확률 통계를 불러오지 못했습니다.',
         children: [
           Center(
             child: TextButton(
               onPressed: () => ref.invalidate(probabilityStatisticsProvider),
-              child: Text('$error\n다시 시도'),
+              child: Text('${userErrorMessage(error)}\n다시 시도'),
             ),
           ),
         ],
       ),
       data: (data) => PageCanvas(
-        title: 'Probability Analytics',
-        subtitle: '${data.bannerName}의 공식·개인·전체 사용자 획득 확률을 비교합니다.',
+        title: '확률 통계',
+        subtitle:
+            '${bannerDisplayName(data.bannerName)}의 공식·개인·전체 사용자 획득 확률을 비교합니다.',
         actions: [
           IconButton(
             tooltip: '새로고침',
@@ -79,7 +82,7 @@ class StatisticsPage extends ConsumerWidget {
                 accent: AppColors.primary,
               ),
               MetricCard(
-                label: 'Luck Score',
+                label: '행운 점수',
                 value: data.luckScore.toStringAsFixed(1),
                 detail: _luckScoreDescription(data.luckScore),
                 icon: Icons.auto_graph,
@@ -169,15 +172,7 @@ class ProbabilityTable extends StatelessWidget {
     return '$sign${points.toStringAsFixed(2)}%p';
   }
 
-  String _rarityLabel(String rarity) {
-    return switch (rarity) {
-      'mythic' => 'Mythic',
-      'legendary' => 'Legendary',
-      'epic' => 'Epic',
-      'rare' => 'Rare',
-      _ => 'Common',
-    };
-  }
+  String _rarityLabel(String rarity) => rarityLabel(rarity);
 
   Color _rarityColor(String rarity) {
     return switch (rarity) {

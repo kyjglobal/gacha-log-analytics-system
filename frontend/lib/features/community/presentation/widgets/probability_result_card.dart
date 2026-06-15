@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme.dart';
+import '../../../../core/constants/display_text.dart';
 import '../../domain/community_post.dart';
 
 class ProbabilityResultCard extends StatelessWidget {
@@ -31,7 +32,7 @@ class ProbabilityResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            certification.itemName,
+            itemDisplayName(certification.itemName),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
@@ -39,7 +40,7 @@ class ProbabilityResultCard extends StatelessWidget {
             spacing: 18,
             runSpacing: 8,
             children: [
-              _Metric('등급', certification.itemRarity),
+              _Metric('등급', rarityLabel(certification.itemRarity)),
               _Metric('누적 추첨', '${certification.drawCount}회'),
               _Metric('공식 확률', _percent(certification.officialProbability)),
               _Metric('개인 확률', _percent(certification.personalProbability)),

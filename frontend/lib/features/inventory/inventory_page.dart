@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/page_canvas.dart';
 import '../../core/widgets/responsive_grid.dart';
+import '../../core/constants/display_text.dart';
+import '../../core/network/error_message.dart';
 import '../../shared/models/owned_item.dart';
 import '../../shared/widgets/inventory_card.dart';
 import '../auth/presentation/auth_providers.dart';
@@ -26,14 +28,14 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
         ? const AsyncData<List<InventoryEntry>>([])
         : ref.watch(inventoryProvider(_filter?.name));
     return PageCanvas(
-      title: 'Inventory',
+      title: '인벤토리',
       subtitle: '서버에 저장된 보유 아이템을 등급별로 조회합니다.',
       actions: [
         DropdownButton<ItemRarity?>(
           value: _filter,
-          hint: const Text('All rarities'),
+          hint: const Text('전체 등급'),
           items: [
-            const DropdownMenuItem(value: null, child: Text('All rarities')),
+            const DropdownMenuItem(value: null, child: Text('전체 등급')),
             ...ItemRarity.values.map(
               (rarity) =>
                   DropdownMenuItem(value: rarity, child: Text(rarity.label)),
@@ -48,7 +50,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
           error: (error, _) => Center(
             child: TextButton(
               onPressed: () => ref.invalidate(inventoryProvider(_filter?.name)),
-              child: Text('인벤토리를 불러오지 못했습니다.\n$error\n다시 시도'),
+              child: Text(
+                '인벤토리를 불러오지 못했습니다.\n'
+                '${userErrorMessage(error)}\n다시 시도',
+              ),
             ),
           ),
           data: (entries) => entries.isEmpty
@@ -72,7 +77,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
 
   OwnedItem _toOwnedItem(InventoryEntry entry) {
     return OwnedItem(
-      entry.itemName,
+      itemDisplayName(entry.itemName),
       ItemRarity.values.firstWhere(
         (rarity) => rarity.name == entry.rarity,
         orElse: () => ItemRarity.common,

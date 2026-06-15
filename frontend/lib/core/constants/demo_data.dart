@@ -10,11 +10,11 @@ class DemoData {
   static const pity = 62;
 
   static const inventory = [
-    OwnedItem('Astra Crown', ItemRarity.mythic, 1, Icons.auto_awesome),
-    OwnedItem('Abyss Codex', ItemRarity.legendary, 2, Icons.menu_book),
-    OwnedItem('Starblade', ItemRarity.epic, 1, Icons.gavel),
-    OwnedItem('Spirit Ring', ItemRarity.rare, 4, Icons.circle_outlined),
-    OwnedItem('Mana Potion', ItemRarity.common, 18, Icons.science),
-    OwnedItem('Guardian Shield', ItemRarity.epic, 2, Icons.shield),
+    OwnedItem('아스트라 왕관', ItemRarity.mythic, 1, Icons.auto_awesome),
+    OwnedItem('심연의 고서', ItemRarity.legendary, 2, Icons.menu_book),
+    OwnedItem('별빛 검', ItemRarity.epic, 1, Icons.gavel),
+    OwnedItem('정령의 반지', ItemRarity.rare, 4, Icons.circle_outlined),
+    OwnedItem('마나 물약', ItemRarity.common, 18, Icons.science),
+    OwnedItem('수호자의 방패', ItemRarity.epic, 2, Icons.shield),
   ];
 }
