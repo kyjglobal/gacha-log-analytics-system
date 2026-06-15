@@ -33,3 +33,19 @@ def test_openapi_contains_application_routes() -> None:
     assert "/api/v1/admin/dashboard" in paths
     assert "/api/v1/admin/users" in paths
     assert "/api/v1/admin/gacha-sessions" in paths
+
+
+def test_cors_allows_flutter_web_localhost_random_port() -> None:
+    response = client.options(
+        "/api/v1/auth/login",
+        headers={
+            "Origin": "http://localhost:54321",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == (
+        "http://localhost:54321"
+    )

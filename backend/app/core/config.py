@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     initial_wallet_balance: int = 12840
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
+    cors_origin_regex: str | None = (
+        r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+    )
 
     model_config = SettingsConfigDict(
         env_file=("../.env", ".env"),

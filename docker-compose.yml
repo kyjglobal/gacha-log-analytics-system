@@ -42,6 +42,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       INITIAL_WALLET_BALANCE: ${INITIAL_WALLET_BALANCE:-12840}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      CORS_ORIGIN_REGEX: ${CORS_ORIGIN_REGEX:-^https?://(localhost|127\.0\.0\.1)(:\d+)?$}
     ports:
       - "8000:8000"
     volumes:
