@@ -33,4 +33,16 @@ class AuthApiService {
     final response = await _client.dio.get<Map<String, dynamic>>('/auth/me');
     return AuthUser.fromJson(response.data!);
   }
+
+  Future<AuthUser> updateAccount({required String nickname}) async {
+    final response = await _client.dio.patch<Map<String, dynamic>>(
+      '/auth/me',
+      data: {'nickname': nickname},
+    );
+    return AuthUser.fromJson(response.data!);
+  }
+
+  Future<void> deleteAccount({required String password}) {
+    return _client.dio.delete<void>('/auth/me', data: {'password': password});
+  }
 }

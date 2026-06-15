@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/widgets/formatters.dart';
 import '../features/admin/admin_page.dart';
 import '../features/auth/presentation/auth_providers.dart';
+import '../features/auth/presentation/account_screen.dart';
 import '../features/auth/presentation/auth_screen.dart';
 import '../features/community/presentation/screens/community_detail_screen.dart';
 import '../features/community/presentation/screens/community_screen.dart';
@@ -27,6 +28,10 @@ class GachaLogApp extends StatelessWidget {
     routes: [
       GoRoute(path: '/', builder: (context, state) => const AppRoot()),
       GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountScreen(),
+      ),
       GoRoute(
         path: '/gacha/history',
         builder: (context, state) => const GachaHistoryScreen(),
@@ -130,7 +135,11 @@ class _AppRootState extends ConsumerState<AppRoot> {
           Expanded(
             child: Column(
               children: [
-                TopBar(crystals: crystals, showMenu: !isDesktop),
+                TopBar(
+                  crystals: crystals,
+                  showMenu: !isDesktop,
+                  nickname: ref.watch(authSessionProvider).value?.user.nickname,
+                ),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
@@ -323,10 +332,16 @@ class NavigationTile extends StatelessWidget {
 }
 
 class TopBar extends StatelessWidget {
-  const TopBar({super.key, required this.crystals, required this.showMenu});
+  const TopBar({
+    super.key,
+    required this.crystals,
+    required this.showMenu,
+    required this.nickname,
+  });
 
   final int crystals;
   final bool showMenu;
+  final String? nickname;
 
   @override
   Widget build(BuildContext context) {
@@ -370,9 +385,17 @@ class TopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const CircleAvatar(
-            backgroundColor: AppColors.primary,
-            child: Text('K', style: TextStyle(fontWeight: FontWeight.w800)),
+          IconButton(
+            tooltip: nickname == null ? '로그인' : '계정 관리',
+            onPressed: () =>
+                context.push(nickname == null ? '/auth' : '/account'),
+            icon: CircleAvatar(
+              backgroundColor: AppColors.primary,
+              child: Text(
+                nickname?.characters.first.toUpperCase() ?? '?',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
           ),
         ],
       ),
