@@ -57,4 +57,24 @@ class AuthSessionNotifier extends AsyncNotifier<AuthSession?> {
     await ref.read(tokenStorageProvider).clear();
     state = const AsyncData(null);
   }
+
+  Future<AuthUser> updateNickname(String nickname) async {
+    final current = state.value;
+    if (current == null) {
+      throw StateError('로그인이 필요합니다.');
+    }
+    final user = await ref
+        .read(authApiServiceProvider)
+        .updateAccount(nickname: nickname);
+    state = AsyncData(
+      AuthSession(accessToken: current.accessToken, user: user),
+    );
+    return user;
+  }
+
+  Future<void> deleteAccount(String password) async {
+    await ref.read(authApiServiceProvider).deleteAccount(password: password);
+    await ref.read(tokenStorageProvider).clear();
+    state = const AsyncData(null);
+  }
 }

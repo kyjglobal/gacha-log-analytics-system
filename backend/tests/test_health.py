@@ -18,6 +18,9 @@ def test_openapi_contains_application_routes() -> None:
     paths = response.json()["paths"]
 
     assert "/api/v1/auth/login" in paths
+    assert "/api/v1/auth/me" in paths
+    assert "patch" in paths["/api/v1/auth/me"]
+    assert "delete" in paths["/api/v1/auth/me"]
     assert "/api/v1/community/posts" in paths
     assert "/api/v1/community/posts/{post_id}/comments" in paths
     assert "/api/v1/community/certifications" in paths

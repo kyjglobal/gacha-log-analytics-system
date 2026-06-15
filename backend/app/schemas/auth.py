@@ -35,6 +35,22 @@ class LoginRequest(BaseModel):
         return value.strip().lower()
 
 
+class AccountUpdateRequest(BaseModel):
+    nickname: str = Field(min_length=2, max_length=50)
+
+    @field_validator("nickname")
+    @classmethod
+    def normalize_nickname(cls, value: str) -> str:
+        normalized = value.strip()
+        if len(normalized) < 2:
+            raise ValueError("닉네임은 2자 이상이어야 합니다.")
+        return normalized
+
+
+class AccountDeleteRequest(BaseModel):
+    password: str = Field(min_length=8, max_length=128)
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
