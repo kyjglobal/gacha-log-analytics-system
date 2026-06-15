@@ -8,6 +8,9 @@ erDiagram
     USERS ||--o{ USER_PITY_STATES : tracks
     USERS ||--o{ INVENTORIES : owns
     USERS ||--o{ INVENTORY_TRANSACTIONS : has
+    USERS ||--o{ COMMUNITY_POSTS : writes
+    USERS ||--o{ COMMUNITY_COMMENTS : writes
+    USERS ||--o{ COMMUNITY_LIKES : creates
 
     GACHA_BANNERS ||--o{ GACHA_POOL_ITEMS : contains
     GACHA_BANNERS ||--o{ GACHA_SESSIONS : receives
@@ -17,18 +20,39 @@ erDiagram
     ITEMS ||--o{ GACHA_RESULTS : awarded
     ITEMS ||--o{ INVENTORIES : stored
     ITEMS ||--o{ INVENTORY_TRANSACTIONS : changes
+    ITEMS ||--o{ PROBABILITY_CERTIFICATIONS : snapshots
 
     GACHA_SESSIONS ||--|{ GACHA_RESULTS : produces
+    GACHA_SESSIONS ||--o{ PROBABILITY_CERTIFICATIONS : groups
+    GACHA_RESULTS ||--o| PROBABILITY_CERTIFICATIONS : certifies
+
+    COMMUNITY_POSTS ||--o{ COMMUNITY_COMMENTS : contains
+    COMMUNITY_POSTS ||--o{ COMMUNITY_LIKES : receives
+    COMMUNITY_POSTS ||--o| PROBABILITY_CERTIFICATIONS : verifies
 ```
 
-## Index Policy
+## 커뮤니티 테이블
 
-- `users(email)`, `users(nickname)`: unique index
-- `gacha_sessions(idempotency_key)`: unique index
-- `gacha_sessions(user_id, created_at)`: 사용자 로그 조회
-- `gacha_results(item_id, created_at)`: 아이템별 확률 집계
-- `gacha_results(was_pity_applied, created_at)`: 천장 보정 통계
-- `inventories(user_id, item_id)`: unique index
-- `user_pity_states(user_id, banner_id)`: unique index
+### community_posts
 
-복합 인덱스는 실제 집계 쿼리의 `EXPLAIN ANALYZE` 결과를 확인한 후 migration에 추가합니다.
+- 사용자 작성 게시글
+- 카테고리, 이미지 URL, 좋아요 수, 조회수 저장
+- `is_deleted`, `deleted_at` 기반 Soft Delete
+- `(category, created_at)`, `(user_id, created_at)` 인덱스
+
+### community_comments
+
+- 게시글 댓글과 작성 사용자 연결
+- `is_deleted`, `deleted_at` 기반 Soft Delete
+- `(post_id, created_at)` 인덱스
+
+### community_likes
+
+- 사용자별 게시글 좋아요
+- `(post_id, user_id)` unique constraint
+
+### probability_certifications
+
+- 게시글과 가챠 결과를 각각 unique FK로 연결
+- 아이템 이름, 등급, 누적 추첨 수, 공식 확률, 개인 확률, 획득 시각 저장
+- 원본 로그를 검증한 뒤 인증 당시 값을 유지하는 스냅샷

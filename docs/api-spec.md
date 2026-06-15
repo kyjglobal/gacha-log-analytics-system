@@ -1,30 +1,55 @@
-# REST API Draft
+# REST API 명세
 
 Base path: `/api/v1`
 
-## Authentication
+인증이 필요한 요청은 다음 헤더를 사용합니다.
 
-| Method | Path | Description |
-| --- | --- | --- |
-| POST | `/auth/signup` | 회원가입 |
-| POST | `/auth/login` | JWT access/refresh token 발급 |
-| POST | `/auth/refresh` | access token 재발급 |
-| GET | `/users/me` | 내 계정 조회 |
-| PATCH | `/users/me` | 계정 정보 수정 |
-| DELETE | `/users/me` | 회원 논리 삭제 |
+```text
+Authorization: Bearer <access_token>
+```
 
-## Gacha and Inventory
+## 인증
 
-| Method | Path | Description |
-| --- | --- | --- |
-| GET | `/banners` | 활성 가챠 배너 조회 |
-| POST | `/gacha/draw` | 1회 또는 10회 가챠 실행 |
-| GET | `/gacha/history` | 사용자 가챠 로그 조회 |
-| GET | `/inventory` | 인벤토리 목록과 등급 필터 |
-| GET | `/statistics/me` | 개인 공식/실제 확률 비교 |
-| GET | `/rankings` | 공개 유저 랭킹 |
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| POST | `/auth/signup` | 불필요 | 회원가입, 초기 재화 지급, JWT 발급 |
+| POST | `/auth/login` | 불필요 | 로그인 및 JWT 발급 |
+| GET | `/auth/me` | 필요 | 현재 사용자 조회 |
+| PATCH | `/auth/me` | 필요 | 현재 사용자의 닉네임 변경 |
+| DELETE | `/auth/me` | 필요 | 비밀번호 확인 후 회원 탈퇴 |
 
-`POST /gacha/draw`는 `Idempotency-Key` 헤더를 필수로 받습니다.
+닉네임 변경 요청:
+
+```json
+{
+  "nickname": "새닉네임"
+}
+```
+
+회원 탈퇴 요청:
+
+```json
+{
+  "password": "current-password"
+}
+```
+
+회원 탈퇴는 사용자를 Soft Delete하고 상태를 `blocked`로 변경합니다. 이메일과 닉네임은 재가입이 가능하도록 익명화하며, 가챠·인벤토리·커뮤니티 로그는 사용자 ID와 함께 감사 목적으로 유지합니다. 관리자 계정은 이 API로 탈퇴할 수 없습니다.
+
+## 가챠
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/gacha/banners` | 필요 | 활성 배너, 확률 풀, 재화, 천장 상태 조회 |
+| POST | `/gacha/draw` | 필요 | 1회 또는 10회 추첨 실행 |
+| GET | `/gacha/history` | 필요 | 사용자 추첨 세션 이력 조회 |
+| GET | `/inventory` | 필요 | 사용자 인벤토리 조회 |
+
+추첨 요청에는 중복 결제를 방지하는 헤더가 필요합니다.
+
+```text
+Idempotency-Key: <8-64 character unique key>
+```
 
 ```json
 {
@@ -33,15 +58,101 @@ Base path: `/api/v1`
 }
 ```
 
-## Admin
+가챠 실행은 재화 차감, 세션·결과 로그 생성, 인벤토리 증가, 천장 갱신을 하나의 DB 트랜잭션으로 처리합니다. 동일 사용자가 같은 `Idempotency-Key`로 재요청하면 기존 결과를 반환합니다.
 
-| Method | Path | Description |
+가챠 이력 Query Parameter:
+
+| 이름 | 기본값 | 설명 |
 | --- | --- | --- |
-| GET | `/admin/dashboard` | 시스템 집계 지표 |
-| GET | `/admin/users` | 사용자 검색 및 정렬 |
-| PATCH | `/admin/users/{user_id}/status` | 정지 및 차단 상태 변경 |
-| GET | `/admin/gacha-logs` | 전체 가챠 로그 검색 |
-| DELETE | `/admin/gacha-logs/{session_id}` | 로그 논리 삭제 |
-| POST | `/admin/inventory/adjustments` | 아이템 수동 지급 및 회수 |
+| `page` | `1` | 페이지 번호 |
+| `size` | `20` | 페이지 크기, 최대 50 |
 
-관리자 변경 작업은 별도 감사 로그에 요청자, 대상, 변경 전후 값, 사유를 기록합니다.
+인벤토리는 `rarity` Query Parameter로 `mythic`, `legendary`, `epic`, `rare`, `common`을 필터링할 수 있습니다.
+
+## 확률 통계
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/statistics/me` | 필요 | 공식·개인·전체 사용자 확률과 Luck Score 조회 |
+
+선택적 `banner_id` Query Parameter로 특정 배너를 조회할 수 있습니다. 생략하면 현재 활성 배너를 사용합니다.
+
+응답은 다음 정보를 포함합니다.
+
+- 개인과 전체 사용자의 유효 가챠 결과 표본 수
+- 등급별 공식 확률
+- 개인 획득 수와 실제 획득 확률
+- 공식 확률 대비 개인 편차
+- 전체 사용자의 획득 수와 실제 획득 확률
+- 희귀도 가중 기대값 대비 개인 결과를 나타내는 Luck Score
+
+삭제된 세션과 `completed` 상태가 아닌 세션은 통계에서 제외합니다.
+
+## 랭킹
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/rankings` | 필요 | Luck Score 기반 사용자 랭킹과 내 순위 조회 |
+
+Query Parameter:
+
+| 이름 | 기본값 | 설명 |
+| --- | --- | --- |
+| `banner_id` | 활성 배너 | 조회할 가챠 배너 |
+| `minimum_draws` | `10` | 랭킹 진입에 필요한 최소 추첨 수 |
+| `limit` | `20` | 반환할 사용자 수, 최대 100 |
+
+랭킹은 Luck Score 내림차순으로 정렬하며, 점수가 같으면 총 추첨 수가 많은 사용자가 우선합니다. 탈퇴·정지 사용자와 삭제되거나 완료되지 않은 가챠 세션은 제외합니다.
+
+## 커뮤니티
+
+| Method | Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| GET | `/community/posts` | 불필요 | 게시글 목록, 검색, 카테고리 필터 |
+| GET | `/community/posts/{post_id}` | 불필요 | 게시글 상세 및 조회수 증가 |
+| POST | `/community/posts` | 필요 | 게시글 작성 |
+| PUT | `/community/posts/{post_id}` | 필요 | 작성자 또는 관리자 게시글 수정 |
+| DELETE | `/community/posts/{post_id}` | 필요 | 게시글 Soft Delete |
+| POST | `/community/posts/{post_id}/like` | 필요 | 좋아요 추가 또는 취소 |
+| GET | `/community/posts/{post_id}/comments` | 불필요 | 댓글 목록 |
+| POST | `/community/posts/{post_id}/comments` | 필요 | 댓글 작성 |
+| PUT | `/community/comments/{comment_id}` | 필요 | 댓글 수정 |
+| DELETE | `/community/comments/{comment_id}` | 필요 | 댓글 Soft Delete |
+| POST | `/community/certifications` | 필요 | 소유한 가챠 결과로 확률 인증 게시글 생성 |
+
+확률 인증 요청:
+
+```json
+{
+  "gacha_result_id": 31,
+  "title": "Spirit Ring 획득 인증",
+  "content": "검증된 가챠 결과를 공유합니다.",
+  "image_url": "https://example.com/screenshot.png"
+}
+```
+
+서버는 결과 소유권과 세션 상태를 검증하고 아이템, 등급, 누적 추첨 수, 공식 확률, 개인 확률, 획득 시각을 자동으로 첨부합니다. 하나의 결과는 한 번만 인증할 수 있으며 카테고리는 `확률 인증`으로 고정됩니다.
+
+## 관리자
+
+모든 관리자 API는 JWT 사용자의 `role`이 `admin`이어야 합니다.
+
+| Method | Path | 설명 |
+| --- | --- | --- |
+| GET | `/admin/dashboard` | 사용자, 유효 추첨, 삭제 로그, 게시글 지표 조회 |
+| GET | `/admin/users` | 이메일·닉네임 검색 및 상태 필터 |
+| PATCH | `/admin/users/{user_id}/status` | 활성·정지·차단 상태 변경 |
+| POST | `/admin/users/{user_id}/inventory-adjustments` | 아이템 수동 지급·회수 |
+| GET | `/admin/gacha-sessions` | 사용자별 가챠 세션 조회 |
+| DELETE | `/admin/gacha-sessions/{session_id}` | 비정상 가챠 세션 Soft Delete |
+
+아이템 조정 요청:
+
+```json
+{
+  "item_id": 1,
+  "quantity_delta": -1
+}
+```
+
+양수는 지급, 음수는 회수이며 보유 수량보다 많이 회수할 수 없습니다. 모든 조정은 `admin_adjustment` 인벤토리 거래 로그로 기록됩니다.
