@@ -1,12 +1,21 @@
+from datetime import UTC, datetime
+
 from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_access_token, hash_password, verify_password
 from app.core.config import settings
+from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User, Wallet
-from app.schemas.auth import LoginRequest, SignUpRequest, TokenResponse
+from app.schemas.auth import (
+    AccountDeleteRequest,
+    AccountUpdateRequest,
+    LoginRequest,
+    SignUpRequest,
+    TokenResponse,
+    UserResponse,
+)
 
 
 class AuthService:
@@ -78,3 +87,60 @@ class AuthService:
             access_token=create_access_token(user.id),
             user=user,
         )
+
+    async def update_account(
+        self,
+        payload: AccountUpdateRequest,
+        current_user: User,
+    ) -> UserResponse:
+        nickname = payload.nickname.strip()
+        if nickname == current_user.nickname:
+            return UserResponse.model_validate(current_user)
+        existing_user = await self.session.scalar(
+            select(User.id).where(
+                User.nickname == nickname,
+                User.id != current_user.id,
+            )
+        )
+        if existing_user is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="이미 사용 중인 닉네임입니다.",
+            )
+        current_user.nickname = nickname
+        try:
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="이미 사용 중인 닉네임입니다.",
+            ) from None
+        await self.session.refresh(current_user)
+        return UserResponse.model_validate(current_user)
+
+    async def delete_account(
+        self,
+        payload: AccountDeleteRequest,
+        current_user: User,
+    ) -> None:
+        if not verify_password(payload.password, current_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="비밀번호가 올바르지 않습니다.",
+            )
+        if current_user.role == "admin":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="관리자 계정은 사용자 화면에서 탈퇴할 수 없습니다.",
+            )
+        deleted_at = datetime.now(UTC)
+        current_user.email = (
+            f"deleted-{current_user.id}-{int(deleted_at.timestamp())}"
+            "@deleted.local"
+        )
+        current_user.nickname = f"deleted_user_{current_user.id}"
+        current_user.status = "blocked"
+        current_user.is_deleted = True
+        current_user.deleted_at = deleted_at
+        await self.session.commit()
