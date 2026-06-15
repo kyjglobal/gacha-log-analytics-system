@@ -15,6 +15,26 @@ Authorization: Bearer <access_token>
 | POST | `/auth/signup` | 불필요 | 회원가입, 초기 재화 지급, JWT 발급 |
 | POST | `/auth/login` | 불필요 | 로그인 및 JWT 발급 |
 | GET | `/auth/me` | 필요 | 현재 사용자 조회 |
+| PATCH | `/auth/me` | 필요 | 현재 사용자의 닉네임 변경 |
+| DELETE | `/auth/me` | 필요 | 비밀번호 확인 후 회원 탈퇴 |
+
+닉네임 변경 요청:
+
+```json
+{
+  "nickname": "새닉네임"
+}
+```
+
+회원 탈퇴 요청:
+
+```json
+{
+  "password": "current-password"
+}
+```
+
+회원 탈퇴는 사용자를 Soft Delete하고 상태를 `blocked`로 변경합니다. 이메일과 닉네임은 재가입이 가능하도록 익명화하며, 가챠·인벤토리·커뮤니티 로그는 사용자 ID와 함께 감사 목적으로 유지합니다. 관리자 계정은 이 API로 탈퇴할 수 없습니다.
 
 ## 가챠
 

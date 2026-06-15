@@ -5,6 +5,7 @@
 | 화면 | Flutter Feature | 주요 API |
 | --- | --- | --- |
 | 로그인·회원가입 | `features/auth` | `/auth/*` |
+| 계정 관리 | `features/auth` | `/auth/me` |
 | 대시보드 | `features/dashboard` | 가챠 배너·이력 데이터 |
 | 가챠 | `features/gacha` | `/gacha/banners`, `/gacha/draw` |
 | 가챠 이력 | `features/gacha` | `/gacha/history` |
@@ -30,9 +31,12 @@
 | 게시글 작성 | `/community/create` | 카테고리, 제목, 내용, 이미지 URL 작성 |
 | 게시글 수정 | `/community/posts/:postId/edit` | 작성자 게시글 수정 |
 | 로그인·회원가입 | `/auth` | JWT 인증 세션 생성 |
+| 계정 관리 | `/account` | 닉네임 변경, 로그아웃, 회원 탈퇴 |
 | 확률 인증 작성 | `/community/certify/:resultId` | 가챠 결과 확인 및 인증 게시글 작성 |
 
 가챠 이력의 각 결과에서 인증 작성 화면으로 이동할 수 있습니다. 게시글 상세 화면은 서버가 검증한 아이템, 등급, 누적 추첨 수, 공식 확률, 개인 확률과 획득 시각을 표시합니다.
+
+상단 사용자 아바타는 로그인 전에는 로그인 화면, 로그인 후에는 계정 관리 화면으로 이동합니다. 회원 탈퇴는 현재 비밀번호 확인 후 실행되며 관리자 계정에서는 비활성화됩니다.
 
 ## 관리자 화면
 
