@@ -1,5 +1,7 @@
 # Gacha Log Analytics System
 
+[![CI](https://github.com/kyjglobal/gacha-log-analytics-system/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/kyjglobal/gacha-log-analytics-system/actions/workflows/ci.yml)
+
 대용량 가챠 로그 적재, 사용자 인벤토리 관리, 공식 확률과 실제 획득 확률 비교, 관리자 백오피스를 제공하는 프로젝트입니다.
 
 ## 프로젝트 구조
@@ -47,3 +49,5 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000/api/v1
 - ERD: [docs/erd.md](docs/erd.md)
 
 모든 개발은 `develop`에서 생성한 `feature/*` 브랜치에서 수행합니다. 커밋 메시지는 `type(scope): 한국어 설명` 형식을 사용합니다.
+
+Pull Request에서는 Git 정책 검사와 함께 Backend tests, Flutter checks, Docker Compose validation을 모두 통과해야 합니다.

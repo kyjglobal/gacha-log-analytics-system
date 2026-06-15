@@ -129,6 +129,14 @@ Docker:
 docker compose config
 ```
 
+Pull Request CI는 다음 검사를 병렬로 실행합니다.
+
+- Backend tests: Python 3.13, `pytest -q`
+- Flutter checks: Dart 포맷, `flutter analyze`, `flutter test`
+- Docker Compose validation: `docker compose config --quiet`
+
+모든 CI 검사가 성공한 후에만 `develop` 또는 `main`으로 병합합니다.
+
 실행하지 못한 테스트가 있다면 Pull Request의 `테스트 결과`에 이유를 명시합니다.
 
 ## Pull Request
